@@ -186,7 +186,6 @@ window.addEventListener('DOMContentLoaded', () => {
             let yRing = parseFloat(targetDot.getAttribute("cy"));
 
             // SELECT SKILL
-            // SELECT SKILL
             if (targetDot.getAttribute("class") == "dotSkill") {
                 targetDot.setAttribute("class", "dotSkill_selected");
                 targetText.setAttribute("class", "textSkill_selected");
@@ -223,7 +222,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 let nearestGroupsArrBefore = Object.entries(nearestGroups);
 
-                // Удаляю дубликаты, чтоб не было лишних перемещений
+                // Удаляем дубликаты, чтоб не было лишних перемещений
                 for (let key in proIdGroup) {
                     if(key in nearestGroups) {
                         delete nearestGroups[key];
@@ -231,7 +230,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Поменять местами текста
+                // Меняем местами текст
                 let nearestGroupsArr = Object.entries(nearestGroups);
                 let proIdGroupArr = Object.entries(proIdGroup);
                 for(let i = 0; i < proIdGroupArr.length; i++) {
@@ -262,7 +261,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 let y1 = [];
                 let namesPro = [];
 
-                // Выделим эти Про
+                // Выделим эти Профессии
                 nearestGroupsArrBefore.forEach(i => {
                     document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotPro_selected");
                     document.querySelector(`#${i[1]} div`).setAttribute("class", "textPro_selected");
@@ -290,36 +289,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 let arr_Coord = [];
                 for (let i = 0; i < arr_Ang.length; i++) {
                     let [x, y] = getCoordCtrlPoint(x0, y0, x1[0], y1[0], arr_Ang[i]);
-                    // arr_Coord.push([Math.round(x), Math.round(y)]);
                     arr_Coord.push([x, y]);
                 }
 
                 // 4 Получим ПРАВИЛЬНЫЙ знак угла (через уравнение прямой проходящ через 2 точки)
-                let arrDegSign = [];
-                for (let i = 0; i < arr_Coord.length; i++) {
-                    let a1 = x1[i] - x0;
-                    let b1 = arr_Coord[i][0] - x0;
-
-                    let a2 = y1[i] - y0;
-                    let b2 = arr_Coord[i][1] - y0;
-
-                    if (b1 == 0) {
-                        b1 = 0.01;
-                    }
-                    if (b2 == 0) {
-                        b2 = 0.01;
-                    }
-
-                    let ab1 = (a1/b1).toFixed(2);
-                    let ab2 = (a2/b2).toFixed(2);
-
-                    if (ab1 == ab2) {
-                        arrDegSign.push(1);
-                    } else {
-                        arrDegSign.push(-1);
-                    }
-
-                }
+                let arrDegSign = getArrWithDegSign(arr_Coord, x0, y0, x1, y1);
 
                 let arrPathClass = [];
                 namesPro.forEach(item => {
@@ -343,7 +317,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     // Рычаг размером 3/4 от отрезка
                     let BCx = (x0 + x1[i]*3)/4;
                     let BCy = (y0 + y1[i]*3)/4;
-
                     // Рычажок раземром 1/4 от отрезка
                     let LCx = (x0 + BCx)/2;
                     let LCy = (y0 + BCy)/2;
@@ -357,7 +330,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // SELECT PRO
             // SELECT PRO
             if (targetDot.getAttribute("class") == "dotPro") {
                 targetDot.setAttribute("class", "dotPro_selected");
@@ -411,7 +383,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 let nearestGroupsArrBefore = Object.entries(nearestGroups);
 
-                // Удаляю дубликаты, чтоб не было лишних перемещений
+                // Удаляем дубликаты, чтоб не было лишних перемещений
                 for (let key in skillIdGroup) {
                     if(key in nearestGroups) {
                         delete nearestGroups[key];
@@ -447,50 +419,25 @@ window.addEventListener('DOMContentLoaded', () => {
                 }); 
 
                 // Здесь прокладываем ПУТИ
-                // 1 Имеем Базовый узел x0y0 и набор точек
-                // Первая точка из набора составляет второй конец Базового отрезка
+                // 1 
                 let x0 = xRing;
                 let y0 = yRing;
 
-                // 2 Найдем углы полученные между Базовой линией и всеми другими линиями
-                // которые из массивов x1 y1
+                // 2 
                 let arr_Ang = [];
                 for (let i = 0; i < x1.length; i++) {
                     arr_Ang.push(getAlpha(x0, y0, x1[0], y1[0], x1[i], y1[i]));
                 }
 
-                // 3 Имея эти углы и Базовую линию, проверим, вернуться ли преждние координаты
+                // 3 
                 let arr_Coord = [];
                 for (let i = 0; i < arr_Ang.length; i++) {
                     let [x, y] = getCoordCtrlPoint(x0, y0, x1[0], y1[0], arr_Ang[i]);
                     arr_Coord.push([x, y]);
                 }
 
-                // 4 Получим ПРАВИЛЬНЫЙ знак угла (через уравнение прямой проходящ через 2 точки)
-                let arrDegSign = [];
-                for (let i = 0; i < arr_Coord.length; i++) {
-                    let a1 = x1[i] - x0;
-                    let b1 = arr_Coord[i][0] - x0;
-
-                    let a2 = y1[i] - y0;
-                    let b2 = arr_Coord[i][1] - y0;
-
-                    if (b1 == 0) {
-                        b1 = 0.01;
-                    }
-                    if (b2 == 0) {
-                        b2 = 0.01;
-                    }
-
-                    let ab1 = (a1/b1).toFixed(2);
-                    let ab2 = (a2/b2).toFixed(2);
-
-                    if (ab1 == ab2) {
-                        arrDegSign.push(1);
-                    } else {
-                        arrDegSign.push(-1);
-                    }
-                }
+                // 4
+                let arrDegSign = getArrWithDegSign(arr_Coord, x0, y0, x1, y1)
 
                 let arrPathClass = [];
                 namesPro.forEach(item => {
@@ -506,16 +453,10 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                // 5 Теперь, зная угол, можно знать в какую сторону отсчитывать угол
-                // большой управляющей точки для кривой Безье
-
-                // Построим кривые
+                // 5 
                 for (let i = 0; i < arrDegSign.length; i++) {
-                    // Рычаг размером 3/4 от отрезка
                     let BCx = (x0 + x1[i]*3)/4;
                     let BCy = (y0 + y1[i]*3)/4;
-
-                    // Рычажок раземром 1/4 от отрезка
                     let LCx = (x0 + BCx)/2;
                     let LCy = (y0 + BCy)/2;
 
@@ -530,8 +471,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-
-
 
 function addDot(dotName, dotParams, dotSize, textData, i, deg, rShift) {
     let [x, y] = getPos(deg, dotParams);
@@ -623,7 +562,6 @@ function addText(x, y, class_name, content, g) {
     div.textContent = content;
     text.append(div);
     
-
     let offset_x = text.getBBox().width/2;
     let offset_y = text.getBBox().height/2;
     text.setAttribute("x", x-offset_x);
@@ -638,6 +576,7 @@ function getPos(deg, skillDotParams, rShift) {
     if (rShift != undefined) {
         rBig += rShift;
     }
+
     let rad = deg2rad(deg);
     let x = xBig + rBig*Math.cos(rad);
     let y = yBig + rBig*Math.sin(rad);
@@ -688,4 +627,31 @@ function getNearestDots(selectedDot) {
     }
     lengthArr.sort((a, b) => a[0] - b[0]);
     return lengthArr;
+}
+
+function getArrWithDegSign(arr_Coord, x0, y0, x1, y1) {
+    let arrDegSign = [];
+    for (let i = 0; i < arr_Coord.length; i++) {
+        let a1 = x1[i] - x0;
+        let b1 = arr_Coord[i][0] - x0;
+        let a2 = y1[i] - y0;
+        let b2 = arr_Coord[i][1] - y0;
+
+        if (b1 == 0) {
+            b1 = 0.01;
+        }
+        if (b2 == 0) {
+            b2 = 0.01;
+        }
+
+        let ab1 = (a1/b1).toFixed(2);
+        let ab2 = (a2/b2).toFixed(2);
+
+        if (ab1 == ab2) {
+            arrDegSign.push(1);
+        } else {
+            arrDegSign.push(-1);
+        }
+    }
+    return arrDegSign;
 }

@@ -1,16 +1,12 @@
 :root {
     font-size: 1rem;
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 #circleArea {
     display: flex;
     justify-content: center;
 }
-
-/* #mainSVG {
-    border: thin solid green;
-} */
 
 svg text{
     -webkit-user-select: none;
@@ -39,58 +35,92 @@ svg text{
     cursor: pointer;
 }
 
+#proRing,
 #skillRing {
     fill: #FFFFFF;
-    stroke: #FF7A00;
     cursor: pointer;
+}
+
+#skillRing {
+    stroke: #FF7A00;
     animation: change_r_Skill 0.2s;
     animation-fill-mode: forwards;
 }
 
-@keyframes change_r_Skill {
-    from {
-        r: 14;
-    }
-    to {
-        r: 17;
-    }
-}
-
 #proRing {
-    fill: #FFFFFF;
     stroke: #00A372;
-    cursor: pointer;
     animation: change_r_pro 0.2s;
     animation-fill-mode: forwards;
 }
 
-@keyframes change_r_pro {
-    from {
-        r: 12;
-    }
-    to {
-        r: 16;
-    }
-}
-
-.textPro {
-    font-weight:bold;
-    font-size:10.6667px;
-    font-family:Arial;
-    color:#3a3a3a;
-    text-align: center;
-    animation: smoother3 1s;
-    animation-fill-mode: forwards;
-}
-
+.textPro,
 .textPro_selected {
     font-weight:bold;
     font-size:10.6667px;
     font-family:Arial;
     color:#3a3a3a;
     text-align: center;
+}
+
+.textPro {
+    animation: smoother3 1s;
+    animation-fill-mode: forwards;
+}
+
+.textPro_selected {
     animation: smoother4 1s;
     animation-fill-mode: forwards;
+}
+
+#rectPro {
+    fill: #ffffff;
+    opacity: 0.7;
+    stroke:#f4f4f4;
+    stroke-width: 1.5;
+}
+
+.textSkill,
+.textSkill_selected {
+    font-weight:bold;
+    font-size:10.6667px;
+    font-family:Arial;
+    text-align: center;
+}
+
+.textSkill {
+    color:#adadad;
+    animation: smoother2 1s;
+    animation-fill-mode: forwards;
+}
+
+.textSkill_selected {
+    color:#3a3a3a;
+    animation: smoother 1s;
+    animation-fill-mode: forwards;
+}
+
+.path,
+.pathOther {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    fill: transparent;
+    stroke-width: 2.5;
+}
+
+.path {
+    stroke: #FF7A00;
+    animation: dash 1.5s linear forwards;
+}
+
+.pathOther {
+    stroke: #8f59b9;
+    animation: dash 1.5s linear forwards;
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: 0;
+    }
 }
 
 @keyframes smoother {
@@ -129,53 +159,20 @@ svg text{
     }
 }
 
-#rectPro {
-    fill: #ffffff;
-    opacity: 0.7;
-    stroke:#f4f4f4;
-    stroke-width: 1.5;
-}
-
-.textSkill_selected {
-    font-weight:bold;
-    font-size:10.6667px;
-    font-family:Arial;
-    color:#3a3a3a;
-    text-align: center;
-    animation: smoother 1s;
-    animation-fill-mode: forwards;
-}
-
-.textSkill {
-    font-weight:bold;
-    font-size:10.6667px;
-    font-family:Arial;
-    color:#adadad;
-    text-align: center;
-    animation: smoother2 1s;
-    animation-fill-mode: forwards;
-}
-
-.path {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    stroke: #FF7A00;
-    fill: transparent;
-    stroke-width: 2.5;
-    animation: dash 1.5s linear forwards;
-}
-
-.pathOther {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    stroke: #8f59b9;
-    fill: transparent;
-    stroke-width: 2.5;
-    animation: dash 1.5s linear forwards;
-}
-
-@keyframes dash {
+@keyframes change_r_Skill {
+    from {
+        r: 14;
+    }
     to {
-        stroke-dashoffset: 0;
+        r: 17;
+    }
+}
+
+@keyframes change_r_pro {
+    from {
+        r: 12;
+    }
+    to {
+        r: 16;
     }
 }
