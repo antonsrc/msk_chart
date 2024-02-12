@@ -1,0 +1,183 @@
+:root {
+    font-size: 1rem;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#circleArea {
+    display: flex;
+    justify-content: center;
+}
+
+/* #mainSVG {
+    border: thin solid green;
+} */
+
+svg text{
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.dotPro {
+    fill: #ADADAD;
+    cursor: pointer;
+}
+
+.dotPro_selected {
+    fill: #00A372;
+    cursor: pointer;
+}
+
+.dotSkill {
+    fill: #FFD4AD;
+    cursor: pointer;
+}
+
+.dotSkill_selected {
+    fill: #FF7A00;
+    cursor: pointer;
+}
+
+#skillRing {
+    fill: #FFFFFF;
+    stroke: #FF7A00;
+    cursor: pointer;
+    animation: change_r_Skill 0.2s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes change_r_Skill {
+    from {
+        r: 14;
+    }
+    to {
+        r: 17;
+    }
+}
+
+#proRing {
+    fill: #FFFFFF;
+    stroke: #00A372;
+    cursor: pointer;
+    animation: change_r_pro 0.2s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes change_r_pro {
+    from {
+        r: 12;
+    }
+    to {
+        r: 16;
+    }
+}
+
+.textPro {
+    font-weight:bold;
+    font-size:10.6667px;
+    font-family:Arial;
+    color:#3a3a3a;
+    text-align: center;
+    animation: smoother3 1s;
+    animation-fill-mode: forwards;
+}
+
+.textPro_selected {
+    font-weight:bold;
+    font-size:10.6667px;
+    font-family:Arial;
+    color:#3a3a3a;
+    text-align: center;
+    animation: smoother4 1s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes smoother {
+    from {
+        opacity: 0.5;
+    }
+    to {
+        opacity:1;
+    }
+}
+
+@keyframes smoother2 {
+    from {
+        opacity: 0.5;
+    }
+    to {
+        opacity:1;
+    }
+}
+
+@keyframes smoother3 {
+    from {
+        opacity: 0.5;
+    }
+    to {
+        opacity:1;
+    }
+}
+
+@keyframes smoother4 {
+    from {
+        opacity: 0.5;
+    }
+    to {
+        opacity:1;
+    }
+}
+
+#rectPro {
+    fill: #ffffff;
+    opacity: 0.7;
+    stroke:#f4f4f4;
+    stroke-width: 1.5;
+}
+
+.textSkill_selected {
+    font-weight:bold;
+    font-size:10.6667px;
+    font-family:Arial;
+    color:#3a3a3a;
+    text-align: center;
+    animation: smoother 1s;
+    animation-fill-mode: forwards;
+}
+
+.textSkill {
+    font-weight:bold;
+    font-size:10.6667px;
+    font-family:Arial;
+    color:#adadad;
+    text-align: center;
+    animation: smoother2 1s;
+    animation-fill-mode: forwards;
+}
+
+.path {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    stroke: #FF7A00;
+    fill: transparent;
+    stroke-width: 2.5;
+    animation: dash 1.5s linear forwards;
+}
+
+.pathOther {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    stroke: #8f59b9;
+    fill: transparent;
+    stroke-width: 2.5;
+    animation: dash 1.5s linear forwards;
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+
