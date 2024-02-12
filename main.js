@@ -145,14 +145,11 @@ document.querySelectorAll('.dotPro').forEach(item => {
 });
 
 
-
 window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll(".dotPro, .dotSkill").forEach(item => {
         item.addEventListener('click', e => {
-            
             document.querySelectorAll("[class$='_selected']").forEach(item => {               
                 let targetSelectedClass = item.getAttribute("class");
-                
                 const skillRing = document.getElementById("skillRing");
                 const proRing = document.getElementById("proRing");
                 const rectPro = document.getElementById("rectPro");
@@ -206,7 +203,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 
-
                 // Получим близжайшие точки, узнаем их группы и какой в этих группах текст
                 let nearestDots = getNearestDots(targetDot).slice(0, selectedPro.length);
                 let nearestGroups = {};
@@ -235,7 +231,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-
                 // Поменять местами текста
                 let nearestGroupsArr = Object.entries(nearestGroups);
                 let proIdGroupArr = Object.entries(proIdGroup);
@@ -262,7 +257,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     document.querySelector(`#${proIdGroupArr[i][1]} div`).textContent = proIdGroupArr[i][0];
                 }
 
-
                 // Массивы для формирования ПУТЕЙ
                 let x1 = [];
                 let y1 = [];
@@ -278,7 +272,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     namesPro.push(document.querySelector(`#${i[1]} div`).textContent);
 
                 });
-
 
                 // Здесь прокладываем ПУТИ
                 // 1 Имеем Базовый узел x0y0 и набор точек
@@ -301,7 +294,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     arr_Coord.push([x, y]);
                 }
 
-
                 // 4 Получим ПРАВИЛЬНЫЙ знак угла (через уравнение прямой проходящ через 2 точки)
                 let arrDegSign = [];
                 for (let i = 0; i < arr_Coord.length; i++) {
@@ -321,8 +313,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     let ab1 = (a1/b1).toFixed(2);
                     let ab2 = (a2/b2).toFixed(2);
 
-                    console.log(ab1, ab2)
-
                     if (ab1 == ab2) {
                         arrDegSign.push(1);
                     } else {
@@ -330,7 +320,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
 
                 }
-
 
                 let arrPathClass = [];
                 namesPro.forEach(item => {
@@ -345,7 +334,6 @@ window.addEventListener('DOMContentLoaded', () => {
                         
                     }
                 });
-
 
                 // 5 Теперь, зная угол, можно знать в какую сторону отсчитывать угол
                 // большой управляющей точки для кривой Безье
@@ -367,9 +355,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
                     addPath(x0, y0, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
                 }
-                
-
-
             }
 
             // SELECT PRO
@@ -397,7 +382,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     otherSkill = pro['otherSkill'];
                 }
  
-
                 // Получим близжайшие точки, узнаем их группы и какой в этих группах текст
                 let endArr = otherSkill.length + mainSkill.length;
                 let nearestDots = getNearestDots(targetDot).slice(0, endArr);
@@ -405,7 +389,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 nearestDots.forEach(item => {
                     nearestGroups[document.querySelector(`#${item[1]} div`).textContent] = item[1];
                 });
-
 
                 // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
                 let skillIdGroup = {};
@@ -426,7 +409,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     });
                 });
 
-
                 let nearestGroupsArrBefore = Object.entries(nearestGroups);
 
                 // Удаляю дубликаты, чтоб не было лишних перемещений
@@ -434,7 +416,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     if(key in nearestGroups) {
                         delete nearestGroups[key];
                         delete skillIdGroup[key];
-
                     }
                 }
                 
@@ -465,13 +446,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 }); 
 
-
                 // Здесь прокладываем ПУТИ
                 // 1 Имеем Базовый узел x0y0 и набор точек
                 // Первая точка из набора составляет второй конец Базового отрезка
                 let x0 = xRing;
                 let y0 = yRing;
-
 
                 // 2 Найдем углы полученные между Базовой линией и всеми другими линиями
                 // которые из массивов x1 y1
@@ -484,7 +463,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 let arr_Coord = [];
                 for (let i = 0; i < arr_Ang.length; i++) {
                     let [x, y] = getCoordCtrlPoint(x0, y0, x1[0], y1[0], arr_Ang[i]);
-                    // arr_Coord.push([Math.round(x), Math.round(y)]);
                     arr_Coord.push([x, y]);
                 }
 
@@ -507,17 +485,12 @@ window.addEventListener('DOMContentLoaded', () => {
                     let ab1 = (a1/b1).toFixed(2);
                     let ab2 = (a2/b2).toFixed(2);
 
-                    console.log(ab1, ab2)
-
                     if (ab1 == ab2) {
                         arrDegSign.push(1);
                     } else {
                         arrDegSign.push(-1);
                     }
-
                 }
-
-                console.log(namesPro);
 
                 let arrPathClass = [];
                 namesPro.forEach(item => {
@@ -532,10 +505,6 @@ window.addEventListener('DOMContentLoaded', () => {
                         
                     }
                 });
-                console.log(arrPathClass)
-
-
-
 
                 // 5 Теперь, зная угол, можно знать в какую сторону отсчитывать угол
                 // большой управляющей точки для кривой Безье
@@ -556,15 +525,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     let [bigCx, bigCy] = getCoordCtrlPoint(x0, y0, BCx, BCy, degB*arrDegSign[i]);
 
                     addPath(x0, y0, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
-                    // addPath(x0, y0, litCx, litCy, bigCx, bigCy, x1[i], y1[i], 'path');
-
                 }
-                
-
-
-
-
-
             }
         });
     });
