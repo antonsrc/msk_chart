@@ -3,11 +3,6 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
-#circleArea {
-    display: flex;
-    justify-content: center;
-}
-
 svg text{
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -35,6 +30,63 @@ svg text{
     cursor: pointer;
 }
 
+.textSkill,
+.textSkill_selected,
+.textPro,
+.textPro_selected {
+    font-weight: bold;
+    font-size: 10.6667px;
+    font-family: Arial;
+    text-align: center;
+}
+
+.textPro {
+    color: #3A3A3A;
+    animation: smoother3 1s;
+    animation-fill-mode: forwards;
+}
+
+.textPro_selected {
+    color: #3A3A3A;
+    animation: smoother4 1s;
+    animation-fill-mode: forwards;
+}
+
+.path,
+.pathOther {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    fill: transparent;
+    stroke-width: 2.5;
+}
+
+.path {
+    stroke: #FF7A00;
+    animation: dash 1.5s linear forwards;
+}
+
+.pathOther {
+    stroke: #8F59B9;
+    animation: dash 1.5s linear forwards;
+}
+
+.textSkill {
+    color: #ADADAD;
+    animation: smoother2 1s;
+    animation-fill-mode: forwards;
+}
+
+.textSkill_selected {
+    color: #3A3A3A;
+    animation: smoother 1s;
+    animation-fill-mode: forwards;
+}
+
+#circleArea {
+    display: flex;
+    justify-content: center;
+}
+
 #proRing,
 #skillRing {
     fill: #FFFFFF;
@@ -53,68 +105,11 @@ svg text{
     animation-fill-mode: forwards;
 }
 
-.textPro,
-.textPro_selected {
-    font-weight:bold;
-    font-size:10.6667px;
-    font-family:Arial;
-    color:#3a3a3a;
-    text-align: center;
-}
-
-.textPro {
-    animation: smoother3 1s;
-    animation-fill-mode: forwards;
-}
-
-.textPro_selected {
-    animation: smoother4 1s;
-    animation-fill-mode: forwards;
-}
-
 #rectPro {
-    fill: #ffffff;
+    fill: #FFFFFF;
     opacity: 0.7;
-    stroke:#f4f4f4;
+    stroke: #F4F4F4;
     stroke-width: 1.5;
-}
-
-.textSkill,
-.textSkill_selected {
-    font-weight:bold;
-    font-size:10.6667px;
-    font-family:Arial;
-    text-align: center;
-}
-
-.textSkill {
-    color:#adadad;
-    animation: smoother2 1s;
-    animation-fill-mode: forwards;
-}
-
-.textSkill_selected {
-    color:#3a3a3a;
-    animation: smoother 1s;
-    animation-fill-mode: forwards;
-}
-
-.path,
-.pathOther {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    fill: transparent;
-    stroke-width: 2.5;
-}
-
-.path {
-    stroke: #FF7A00;
-    animation: dash 1.5s linear forwards;
-}
-
-.pathOther {
-    stroke: #8f59b9;
-    animation: dash 1.5s linear forwards;
 }
 
 @keyframes dash {

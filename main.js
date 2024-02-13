@@ -52,7 +52,6 @@ const DATA = [
         mainSkill: ["Sketch", "Figma"],
         otherSkill: ["Shopify", "HQL"],
     },
-
     {
         name: "Продуктовый аналитик",
         mainSkill: [
@@ -65,7 +64,6 @@ const DATA = [
         ],
         otherSkill: ["HQL", "Tableau", "R", "Machine learning"],
     },
-
     {
         name: "Руководитель финансового продукта",
         mainSkill: ["Visio"],
@@ -83,7 +81,6 @@ const DATA = [
         ],
         otherSkill: ["Tilda", "Photoshop", "Xenu", "Python"],
     },
-
     {
         name: "Менеджер по цифровой трансформации",
         mainSkill: [
@@ -102,48 +99,35 @@ const arrSkill = getAllSkill(DATA);
 const arrPro = getAllPro(DATA);
 
 const mainSVG = document.getElementById('mainSVG');
-const SkillCircle = document.getElementById("SkillCircle");
+const skillCircle = document.getElementById("skillCircle");
 const proCircle = document.getElementById("proCircle");
 
-const numSkillDots = arrSkill.length;
-const degStepSkill = 360/numSkillDots;
+const degStepSkill = 360/arrSkill.length;
 const skillDotParams = {
-    'cx': parseFloat(SkillCircle.getAttribute("cx")),
-    'cy': parseFloat(SkillCircle.getAttribute("cy")),
-    'r': parseFloat(SkillCircle.getAttribute("r"))
+    'cx': +skillCircle.getAttribute("cx"),
+    'cy': +skillCircle.getAttribute("cy"),
+    'r': +skillCircle.getAttribute("r")
 };
 
-const numProDots = arrPro.length;
-const degStepPro = 360/numProDots;
+const degStepPro = 360/arrPro.length;
 const proDotParams = {
-    'cx': parseFloat(proCircle.getAttribute("cx")),
-    'cy': parseFloat(proCircle.getAttribute("cy")),
-    'r': parseFloat(proCircle.getAttribute("r"))
+    'cx': +proCircle.getAttribute("cx"),
+    'cy': +proCircle.getAttribute("cy"),
+    'r': +proCircle.getAttribute("r")
 };
 
-let objPathSk = {};
-let objPathPr = {};
+const objPathSkill = {};
+const objPathPro = {};
 
 for (let i = -90, j = 0; i < 270; i += degStepSkill, j++) {
     addDot("Skill", skillDotParams, 14, arrSkill, j, i, 60);
-    objPathSk['groupSkill_'+j] = getPos(i, {'cx': 400, 'cy': 400, 'r': 300});
+    objPathSkill['groupSkill_'+j] = getPos(i, skillDotParams);
 }
 
 for (let i = -90, j = 0; i < 270; i += degStepPro, j++) {
     addDot("Pro", proDotParams, 12, arrPro, j, i, 73);
-    objPathPr['groupPro_'+j] = getPos(i, {'cx': 400, 'cy': 400, 'r': 170});
+    objPathPro['groupPro_'+j] = getPos(i, proDotParams);
 }
-
-let coordSkillDots = [];
-document.querySelectorAll('.dotSkill').forEach(item => {
-    coordSkillDots.push([item.getAttribute("cx"), item.getAttribute("cy"), item.parentNode.id]);
-});
-
-let coordProDots = [];
-document.querySelectorAll('.dotPro').forEach(item => {
-    coordProDots.push([item.getAttribute("cx"), item.getAttribute("cy"), item.parentNode.id]);
-});
-
 
 window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll(".dotPro, .dotSkill").forEach(item => {
@@ -182,8 +166,8 @@ window.addEventListener('DOMContentLoaded', () => {
             let targetText = document.querySelector(`#${targetGroup.id} div`);
             let targetTextContent = targetText.textContent;
 
-            let xRing = parseFloat(targetDot.getAttribute("cx"));
-            let yRing = parseFloat(targetDot.getAttribute("cy"));
+            let xRing = +targetDot.getAttribute("cx");
+            let yRing = +targetDot.getAttribute("cy");
 
             // SELECT SKILL
             if (targetDot.getAttribute("class") == "dotSkill") {
@@ -238,13 +222,13 @@ window.addEventListener('DOMContentLoaded', () => {
                     nearestGroupsArr[i][0] = proIdGroupArr[i][0];
                     proIdGroupArr[i][0] = temp;
 
-                    let wN = parseFloat(document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("width"));
-                    let hN = parseFloat(document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("height"));
+                    let wN = +document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("width");
+                    let hN = +document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("height");
                     let tempW = wN;
                     let tempH = hN;
 
-                    let wS = parseFloat(document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("width"));
-                    let hS = parseFloat(document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("height"));
+                    let wS = +document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("width");
+                    let hS = +document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("height");
 
                     document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).setAttribute("width", wS);
                     document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).setAttribute("height", hS);
@@ -266,8 +250,8 @@ window.addEventListener('DOMContentLoaded', () => {
                     document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotPro_selected");
                     document.querySelector(`#${i[1]} div`).setAttribute("class", "textPro_selected");
 
-                    x1.push(parseFloat(document.querySelector(`#${i[1]} circle`).getAttribute("cx")));
-                    y1.push(parseFloat(document.querySelector(`#${i[1]} circle`).getAttribute("cy")));
+                    x1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cx"));
+                    y1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cy"));
                     namesPro.push(document.querySelector(`#${i[1]} div`).textContent);
 
                 });
@@ -341,8 +325,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 let height = targetText.offsetHeight + dy;
                 let offset_x = dx/2;
                 let offset_y = dy/2;
-                let xRect = parseFloat(targetText.parentNode.getAttribute("x")) - offset_x;
-                let yRect = parseFloat(targetText.parentNode.getAttribute("y")) - offset_y;
+                let xRect = +targetText.parentNode.getAttribute("x") - offset_x;
+                let yRect = +targetText.parentNode.getAttribute("y") - offset_y;
                 addRect(xRect, yRect, width, height, 7, "rectPro");
 
                 // Добавляем в массивы mainSkill и otherSkill те Навыки с которыми работает Профессия
@@ -412,8 +396,8 @@ window.addEventListener('DOMContentLoaded', () => {
                     document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotSkill_selected");
                     document.querySelector(`#${i[1]} div`).setAttribute("class", "textSkill_selected");
                 
-                    x1.push(parseFloat(document.querySelector(`#${i[1]} circle`).getAttribute("cx")));
-                    y1.push(parseFloat(document.querySelector(`#${i[1]} circle`).getAttribute("cy")));
+                    x1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cx"));
+                    y1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cy"));
                     namesPro.push(document.querySelector(`#${i[1]} div`).textContent);
 
                 }); 
@@ -508,13 +492,13 @@ function addGroup(id, class_name) {
     return g;
 }
 
-function addCircle(x, y, r, class_name, g) {
-    let miniCir = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    miniCir.setAttribute("cx", x);
-    miniCir.setAttribute("cy", y);
-    miniCir.setAttribute("r", r);
-    miniCir.setAttribute("class", class_name);
-    g.append(miniCir);
+function addCircle(x, y, r, class_name, group) {
+    let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    element.setAttribute("cx", x);
+    element.setAttribute("cy", y);
+    element.setAttribute("r", r);
+    element.setAttribute("class", class_name);
+    group.append(element);
 }
 
 function addPath(x0, y0, xc1, yc1, xc2, yc2, x1, y1, class_name) {
@@ -542,13 +526,13 @@ function getAlpha(x0, y0, x1, y1, x1_new, y1_new) {
     let a2 = y1 - y0;
     let b1 = x1_new - x0;
     let b2 = y1_new - y0;
-    let cosA = (a1*b1+a2*b2)/(Math.sqrt(a1*a1 + a2*a2)*Math.sqrt(b1*b1 + b2*b2));
+    let cosA = (a1*b1 + a2*b2)/(Math.sqrt(a1**2 + a2**2)*Math.sqrt(b1**2 + b2**2));
     return Math.acos(cosA)*180/Math.PI;
 }
 
 function addText(x, y, class_name, content, g) {
     let text = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
-    let arr_content = content.split(' ');
+    let arr_content = content.split(" ");
     let height = arr_content.length*14;
     
     text.setAttribute("x", x);
@@ -608,22 +592,21 @@ function getLength(x1, y1, x2, y2) {
 }
 
 function getNearestDots(selectedDot) {
-    let xP = parseFloat(selectedDot.getAttribute("cx"));
-    let yP = parseFloat(selectedDot.getAttribute("cy"));
+    let xP = +selectedDot.getAttribute("cx");
+    let yP = +selectedDot.getAttribute("cy");
     let lengthArr = [];
     if (selectedDot.getAttribute("class") == "dotSkill_selected") {
-        coordProDots.forEach(item => {
-            let [xS, yS] = [item[0], item[1]];
+        for(let group in objPathPro) {
+            let [xS, yS] = objPathPro[group];
             let len = getLength(xP, yP, xS, yS);
-            lengthArr.push([len, item[2]]);
-        });
+            lengthArr.push([len, group]);
+        }
     } else if (selectedDot.getAttribute("class") == "dotPro_selected") {
-        coordSkillDots.forEach(item => {
-            let [xS, yS] = [item[0], item[1]];
+        for(let group in objPathSkill) {
+            let [xS, yS] = objPathSkill[group];
             let len = getLength(xP, yP, xS, yS);
-            lengthArr.push([len, item[2]]);
-
-        });
+            lengthArr.push([len, group]);
+        }
     }
     lengthArr.sort((a, b) => a[0] - b[0]);
     return lengthArr;
@@ -637,12 +620,10 @@ function getArrWithDegSign(arr_Coord, x0, y0, x1, y1) {
         let a2 = y1[i] - y0;
         let b2 = arr_Coord[i][1] - y0;
 
-        if (b1 == 0) {
-            b1 = 0.01;
-        }
-        if (b2 == 0) {
-            b2 = 0.01;
-        }
+        if (b1 == 0) b1 = 0.01;
+        if (b2 == 0) b2 = 0.01;
+        if (a1 == 0) a1 = 0.01;
+        if (a2 == 0) a2 = 0.01;
 
         let ab1 = (a1/b1).toFixed(2);
         let ab2 = (a2/b2).toFixed(2);
