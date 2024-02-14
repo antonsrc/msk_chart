@@ -116,6 +116,13 @@ const proDotParams = {
     'r': +proCircle.getAttribute("r")
 };
 
+const arrElementsForRemoving = [
+    "skillRing",
+    "proRing",
+    "rectPro",
+    "pathCurve"
+];
+
 const objPathSkill = {};
 const objPathPro = {};
 
@@ -134,11 +141,6 @@ window.addEventListener('DOMContentLoaded', () => {
         item.addEventListener('click', e => {
             document.querySelectorAll("[class$='_selected']").forEach(item => {               
                 let targetSelectedClass = item.getAttribute("class");
-                const skillRing = document.getElementById("skillRing");
-                const proRing = document.getElementById("proRing");
-                const rectPro = document.getElementById("rectPro");
-                const pathCurve = document.getElementById("pathCurve");
-
                 if (targetSelectedClass == "dotSkill_selected") {
                     item.setAttribute("class", "dotSkill");
                 } else if (targetSelectedClass == "dotPro_selected") {
@@ -148,17 +150,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 } else if (targetSelectedClass == "textSkill_selected") {
                     item.setAttribute("class", "textSkill");
                 }
-
-                if (document.body.contains(skillRing)) {
-                    skillRing.remove();
-                } else if (document.body.contains(proRing)) {
-                    proRing.remove();
-                } else if (document.body.contains(rectPro)) {
-                    rectPro.remove();
-                }
-                if (document.body.contains(pathCurve)) {
-                    pathCurve.remove();
-                } 
+                removeLastEvents(arrElementsForRemoving);
             });
 
             let targetGroup = e.target.parentNode;
@@ -635,4 +627,13 @@ function getArrWithDegSign(arr_Coord, x0, y0, x1, y1) {
         }
     }
     return arrDegSign;
+}
+
+function removeLastEvents(arr) {
+    arr.forEach(item => {
+        let element = document.getElementById(item);
+        if (document.body.contains(element)) {
+            element.remove();
+        }
+    });
 }
