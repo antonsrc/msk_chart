@@ -141,12 +141,6 @@ window.addEventListener('DOMContentLoaded', () => {
         item.addEventListener('click', e => {
             document.querySelectorAll("[class$='_selected']").forEach(item => {               
                 let targetSelectedClass = item.getAttribute("class");
-
-                const skillRing = document.getElementById("skillRing");
-                const proRing = document.getElementById("proRing");
-                const rectPro = document.getElementById("rectPro");
-                const pathCurve = document.getElementById("pathCurve");
-
                 if (targetSelectedClass == "dotSkill_selected") {
                     item.setAttribute("class", "dotSkill");
                 } else if (targetSelectedClass == "dotPro_selected") {
@@ -156,19 +150,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 } else if (targetSelectedClass == "textSkill_selected") {
                     item.setAttribute("class", "textSkill");
                 }
-
-                if (document.body.contains(skillRing)) {
-                    skillRing.remove();
-                } else if (document.body.contains(proRing)) {
-                    proRing.remove();
-                } else if (document.body.contains(rectPro)) {
-                    rectPro.remove();
-                }
-                if (document.body.contains(pathCurve)) {
-                    pathCurve.remove();
-                } 
-
-                // removeLastEvents(arrElementsForRemoving);
+                removeLastEvents(arrElementsForRemoving);
             });
 
             let targetGroup = e.target.parentNode;
@@ -180,7 +162,7 @@ window.addEventListener('DOMContentLoaded', () => {
             let yRing = +targetDot.getAttribute("cy");
 
             // SELECT SKILL
-            if (targetDot.getAttribute("class") == "dotSkill") {
+            if (targetDot.getAttribute("class") == "dotSkill" || targetDot.getAttribute("class") == "dotSkill_selected") {
                 targetDot.setAttribute("class", "dotSkill_selected");
                 targetText.setAttribute("class", "textSkill_selected");
                 addRing(xRing, yRing, 14, "skillRing");
@@ -325,9 +307,9 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             // SELECT PRO
-            if (targetDot.getAttribute("class") == "dotPro") {
+            if (targetDot.getAttribute("class") == "dotPro" || targetDot.getAttribute("class") == "dotPro_selected") {
                 targetDot.setAttribute("class", "dotPro_selected");
-                addRing(xRing, yRing, 14, "proRing");
+                addRing(xRing, yRing, 12, "proRing");
 
                 let dx = 8;
                 let dy = 8;
