@@ -309,7 +309,7 @@ window.addEventListener('DOMContentLoaded', () => {
             // SELECT PRO
             if (targetDot.getAttribute("class") == "dotPro") {
                 targetDot.setAttribute("class", "dotPro_selected");
-                addRing(xRing, yRing, 12, "proRing");
+                addRing(xRing, yRing, 14, "proRing");
 
                 let dx = 8;
                 let dy = 8;

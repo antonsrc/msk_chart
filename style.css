@@ -95,13 +95,13 @@ svg text{
 
 #skillRing {
     stroke: #FF7A00;
-    animation: change_r_Skill 0.2s;
+    animation: change_r_Skill 0.1s;
     animation-fill-mode: forwards;
 }
 
 #proRing {
     stroke: #00A372;
-    animation: change_r_pro 0.2s;
+    animation: change_r_pro 0.1s;
     animation-fill-mode: forwards;
 }
 
@@ -156,7 +156,7 @@ svg text{
 
 @keyframes change_r_Skill {
     from {
-        r: 14;
+        r: 1;
     }
     to {
         r: 17;
@@ -165,7 +165,7 @@ svg text{
 
 @keyframes change_r_pro {
     from {
-        r: 12;
+        r: 1;
     }
     to {
         r: 16;
