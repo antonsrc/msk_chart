@@ -162,7 +162,7 @@ window.addEventListener('DOMContentLoaded', () => {
             let yRing = +targetDot.getAttribute("cy");
 
             // SELECT SKILL
-            if (targetDot.getAttribute("class") == "dotSkill" || targetDot.getAttribute("class") == "dotSkill_selected") {
+            if (targetDot.getAttribute("class") == "dotSkill") {
                 targetDot.setAttribute("class", "dotSkill_selected");
                 targetText.setAttribute("class", "textSkill_selected");
                 addRing(xRing, yRing, 14, "skillRing");
@@ -307,7 +307,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             // SELECT PRO
-            if (targetDot.getAttribute("class") == "dotPro" || targetDot.getAttribute("class") == "dotPro_selected") {
+            if (targetDot.getAttribute("class") == "dotPro") {
                 targetDot.setAttribute("class", "dotPro_selected");
                 addRing(xRing, yRing, 12, "proRing");
 
