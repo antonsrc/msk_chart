@@ -139,25 +139,11 @@ for (let i = -90, j = 0; i < 270; i += degStepPro, j++) {
 window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll(".dotPro, .dotSkill").forEach(item => {
         item.addEventListener('click', e => {
-            document.querySelectorAll("[class$='_selected']").forEach(item => {               
-                let targetSelectedClass = item.getAttribute("class");
-                if (targetSelectedClass == "dotSkill_selected") {
-                    item.setAttribute("class", "dotSkill");
-                } else if (targetSelectedClass == "dotPro_selected") {
-                    item.setAttribute("class", "dotPro");
-                } else if (targetSelectedClass == "textPro_selected") {
-                    item.setAttribute("class", "textPro");
-                } else if (targetSelectedClass == "textSkill_selected") {
-                    item.setAttribute("class", "textSkill");
-                }
-                removeLastEvents(arrElementsForRemoving);
-            });
-
+            unselectAll();
             let targetGroup = e.target.parentNode;
             let targetDot = e.target;
             let targetText = document.querySelector(`#${targetGroup.id} div`);
             let targetTextContent = targetText.textContent;
-
             let xRing = +targetDot.getAttribute("cx");
             let yRing = +targetDot.getAttribute("cy");
 
@@ -635,5 +621,12 @@ function removeLastEvents(arr) {
         if (document.body.contains(element)) {
             element.remove();
         }
+    });
+}
+
+function unselectAll() {
+    document.querySelectorAll("[class$='_selected']").forEach(item => {
+        item.setAttribute("class", item.getAttribute("class").slice(0,-9));
+        removeLastEvents(arrElementsForRemoving);
     });
 }
