@@ -136,301 +136,306 @@ for (let i = -90, j = 0; i < 270; i += degStepPro, j++) {
     objPathPro['groupPro_'+j] = getPos(i, proDotParams);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll(".dotPro, .dotSkill").forEach(item => {
-        item.addEventListener('click', e => {
+window.addEventListener('load', () => {
+    mainSVG.addEventListener('click', e => {
+        let targetText;
+        let targetTextContent;
+        let xRing;
+        let yRing;
+        if((e.target.parentNode.getAttribute("class") == "gPro") || (e.target.parentNode.getAttribute("class") == "gSkill")) {
             unselectAll();
-            let targetGroup = e.target.parentNode;
-            let targetDot = e.target;
-            let targetText = document.querySelector(`#${targetGroup.id} div`);
-            let targetTextContent = targetText.textContent;
-            let xRing = +targetDot.getAttribute("cx");
-            let yRing = +targetDot.getAttribute("cy");
+            targetText = document.querySelector(`#${e.target.parentNode.id} div`);
+            targetTextContent = targetText.textContent;
+            xRing = +e.target.getAttribute("cx");
+            yRing = +e.target.getAttribute("cy");
+        }
 
-            // SELECT SKILL
-            if (targetDot.getAttribute("class") == "dotSkill") {
-                targetDot.setAttribute("class", "dotSkill_selected");
-                targetText.setAttribute("class", "textSkill_selected");
-                addRing(xRing, yRing, 14, "skillRing");
+        if (e.target.getAttribute("class") == "dotSkill") {
+            e.target.setAttribute("class", "dotSkill_selected");
+            targetText.setAttribute("class", "textSkill_selected");
 
-                let selectedPro = [];
-                // Добавляем в массив selectedPro те Профессии которые работают с определенным Навыком
-                DATA.forEach(item => {
-                    if (item['mainSkill'].includes(targetTextContent)) {
-                        selectedPro.push(item.name);
-                    }
-                    if (item['otherSkill'].includes(targetTextContent)) {
-                        selectedPro.push(item.name);
-                    }
-                });
-                
-                // Получим близжайшие точки, узнаем их группы и какой в этих группах текст
-                let nearestDots = getNearestDots(targetDot).slice(0, selectedPro.length);
-                let nearestGroups = {};
-                nearestDots.forEach(item => {
-                    nearestGroups[document.querySelector(`#${item[1]} div`).textContent] = item[1];
-                });
-
-                // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
-                let proIdGroup = {};
-                selectedPro.forEach(item => {
-                    document.querySelectorAll(".textPro").forEach(i => {
-                        if(i.textContent == item) {
-                            let groupSkill = i.closest("g");
-                            proIdGroup[i.textContent] = groupSkill.id;
-                        }
-                    });
-                });
-
-                let nearestGroupsArrBefore = Object.entries(nearestGroups);
-
-                // Удаляем дубликаты, чтоб не было лишних перемещений
-                for (let key in proIdGroup) {
-                    if(key in nearestGroups) {
-                        delete nearestGroups[key];
-                        delete proIdGroup[key];
-                    }
+            let selectedPro = [];
+            // Добавляем в массив selectedPro те Профессии которые работают с определенным Навыком
+            DATA.forEach(item => {
+                if (item['mainSkill'].includes(targetTextContent)) {
+                    selectedPro.push(item.name);
                 }
-
-                // Меняем местами текст
-                let nearestGroupsArr = Object.entries(nearestGroups);
-                let proIdGroupArr = Object.entries(proIdGroup);
-                for(let i = 0; i < proIdGroupArr.length; i++) {
-                    let temp = nearestGroupsArr[i][0];
-                    nearestGroupsArr[i][0] = proIdGroupArr[i][0];
-                    proIdGroupArr[i][0] = temp;
-
-                    let wN = +document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("width");
-                    let hN = +document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("height");
-                    let tempW = wN;
-                    let tempH = hN;
-
-                    let wS = +document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("width");
-                    let hS = +document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("height");
-
-                    document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).setAttribute("width", wS);
-                    document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).setAttribute("height", hS);
-
-                    document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).setAttribute("width", tempW);
-                    document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).setAttribute("height", tempH);
-
-                    document.querySelector(`#${nearestGroupsArr[i][1]} div`).textContent = nearestGroupsArr[i][0];
-                    document.querySelector(`#${proIdGroupArr[i][1]} div`).textContent = proIdGroupArr[i][0];
+                if (item['otherSkill'].includes(targetTextContent)) {
+                    selectedPro.push(item.name);
                 }
+            });
+            
+            // Получим близжайшие точки, узнаем их группы и какой в этих группах текст
+            let nearestDots = getNearestDots(e.target).slice(0, selectedPro.length);
+            let nearestGroups = {};
+            nearestDots.forEach(item => {
+                nearestGroups[document.querySelector(`#${item[1]} div`).textContent] = item[1];
+            });
 
-                // Массивы для формирования ПУТЕЙ
-                let x1 = [];
-                let y1 = [];
-                let namesPro = [];
-
-                // Выделим эти Профессии
-                nearestGroupsArrBefore.forEach(i => {
-                    document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotPro_selected");
-                    document.querySelector(`#${i[1]} div`).setAttribute("class", "textPro_selected");
-
-                    x1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cx"));
-                    y1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cy"));
-                    namesPro.push(document.querySelector(`#${i[1]} div`).textContent);
-
-                });
-
-                // Здесь прокладываем ПУТИ
-                // 1 Имеем Базовый узел x0y0 и набор точек
-                // Первая точка из набора составляет второй конец Базового отрезка
-                let x0 = xRing;
-                let y0 = yRing;
-
-                // 2 Найдем углы полученные между Базовой линией и всеми другими линиями
-                // которые из массивов x1 y1
-                let arr_Ang = [];
-                for (let i = 0; i < x1.length; i++) {
-                    arr_Ang.push(getAlpha(x0, y0, x1[0], y1[0], x1[i], y1[i]));
-                }
-
-                // 3 Имея эти углы и Базовую линию, проверим, вернуться ли преждние координаты
-                let arr_Coord = [];
-                for (let i = 0; i < arr_Ang.length; i++) {
-                    let [x, y] = getCoordCtrlPoint(x0, y0, x1[0], y1[0], arr_Ang[i]);
-                    arr_Coord.push([x, y]);
-                }
-
-                // 4 Получим ПРАВИЛЬНЫЙ знак угла (через уравнение прямой проходящ через 2 точки)
-                let arrDegSign = getArrWithDegSign(arr_Coord, x0, y0, x1, y1);
-
-                let arrPathClass = [];
-                namesPro.forEach(item => {
-                    for (let i = 0; i < DATA.length; i++) {
-                        if (DATA[i].name == item) {
-                            if (DATA[i].mainSkill.includes(targetText.textContent)) {
-                                arrPathClass.push('path');
-                            } else if (DATA[i].otherSkill.includes(targetText.textContent)) {
-                                arrPathClass.push('pathOther');
-                            }
-                        }
-                        
+            // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
+            let proIdGroup = {};
+            selectedPro.forEach(item => {
+                document.querySelectorAll(".textPro").forEach(i => {
+                    if(i.textContent == item) {
+                        let groupSkill = i.closest("g");
+                        proIdGroup[i.textContent] = groupSkill.id;
                     }
                 });
+            });
 
-                // 5 Теперь, зная угол, можно знать в какую сторону отсчитывать угол
-                // большой управляющей точки для кривой Безье
+            let nearestGroupsArrBefore = Object.entries(nearestGroups);
 
-                // Построим кривые
-                for (let i = 0; i < arrDegSign.length; i++) {
-                    // Рычаг размером 3/4 от отрезка
-                    let BCx = (x0 + x1[i]*3)/4;
-                    let BCy = (y0 + y1[i]*3)/4;
-                    // Рычажок раземром 1/4 от отрезка
-                    let LCx = (x0 + BCx)/2;
-                    let LCy = (y0 + BCy)/2;
-
-                    let degL = 5;
-                    let degB = 5 + 13*i;
-                    let [litCx, litCy] = getCoordCtrlPoint(x0, y0, LCx, LCy, degL*arrDegSign[i]*(-1));
-                    let [bigCx, bigCy] = getCoordCtrlPoint(x0, y0, BCx, BCy, degB*arrDegSign[i]);
-
-                    addPath(x0, y0, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
+            // Удаляем дубликаты, чтоб не было лишних перемещений
+            for (let key in proIdGroup) {
+                if(key in nearestGroups) {
+                    delete nearestGroups[key];
+                    delete proIdGroup[key];
                 }
             }
 
-            // SELECT PRO
-            if (targetDot.getAttribute("class") == "dotPro") {
-                targetDot.setAttribute("class", "dotPro_selected");
-                addRing(xRing, yRing, 14, "proRing");
+            // Меняем местами текст
+            let nearestGroupsArr = Object.entries(nearestGroups);
+            let proIdGroupArr = Object.entries(proIdGroup);
+            for(let i = 0; i < proIdGroupArr.length; i++) {
+                let temp = nearestGroupsArr[i][0];
+                nearestGroupsArr[i][0] = proIdGroupArr[i][0];
+                proIdGroupArr[i][0] = temp;
 
-                let dx = 8;
-                let dy = 8;
-                let width = targetText.offsetWidth + dx;
-                let height = targetText.offsetHeight + dy;
-                let offset_x = dx/2;
-                let offset_y = dy/2;
-                let xRect = +targetText.parentNode.getAttribute("x") - offset_x;
-                let yRect = +targetText.parentNode.getAttribute("y") - offset_y;
-                addRect(xRect, yRect, width, height, 7, "rectPro");
+                let wN = +document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("width");
+                let hN = +document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("height");
+                let tempW = wN;
+                let tempH = hN;
 
-                // Добавляем в массивы mainSkill и otherSkill те Навыки с которыми работает Профессия
-                let mainSkill = [];
-                let otherSkill = [];
-                let pro = DATA.filter(obj => obj.name == targetTextContent)[0];
-                mainSkill = pro['mainSkill']
-                if (pro.hasOwnProperty('otherSkill')) {
-                    otherSkill = pro['otherSkill'];
-                }
- 
-                // Получим близжайшие точки, узнаем их группы и какой в этих группах текст
-                let endArr = otherSkill.length + mainSkill.length;
-                let nearestDots = getNearestDots(targetDot).slice(0, endArr);
-                let nearestGroups = {};
-                nearestDots.forEach(item => {
-                    nearestGroups[document.querySelector(`#${item[1]} div`).textContent] = item[1];
-                });
+                let wS = +document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("width");
+                let hS = +document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("height");
 
-                // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
-                let skillIdGroup = {};
-                mainSkill.forEach(item => {
-                    document.querySelectorAll(".textSkill").forEach(i => {
-                        if (i.textContent == item) {
-                            let groupPro = i.closest("g");
-                            skillIdGroup[i.textContent] = groupPro.id;
+                document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).setAttribute("width", wS);
+                document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).setAttribute("height", hS);
+
+                document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).setAttribute("width", tempW);
+                document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).setAttribute("height", tempH);
+
+                document.querySelector(`#${nearestGroupsArr[i][1]} div`).textContent = nearestGroupsArr[i][0];
+                document.querySelector(`#${proIdGroupArr[i][1]} div`).textContent = proIdGroupArr[i][0];
+            }
+
+            // Массивы для формирования ПУТЕЙ
+            let x1 = [];
+            let y1 = [];
+            let namesPro = [];
+
+            // Выделим эти Профессии
+            nearestGroupsArrBefore.forEach(i => {
+                document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotPro_selected");
+                document.querySelector(`#${i[1]} div`).setAttribute("class", "textPro_selected");
+
+                x1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cx"));
+                y1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cy"));
+                namesPro.push(document.querySelector(`#${i[1]} div`).textContent);
+
+            });
+
+            addRing(xRing, yRing, 14, "skillRing");
+
+            // Здесь прокладываем ПУТИ
+            // 1 Имеем Базовый узел x0y0 и набор точек
+            // Первая точка из набора составляет второй конец Базового отрезка
+            let x0 = xRing;
+            let y0 = yRing;
+
+            // 2 Найдем углы полученные между Базовой линией и всеми другими линиями
+            // которые из массивов x1 y1
+            let arr_Ang = [];
+            for (let i = 0; i < x1.length; i++) {
+                arr_Ang.push(getAlpha(x0, y0, x1[0], y1[0], x1[i], y1[i]));
+            }
+
+            // 3 Имея эти углы и Базовую линию, проверим, вернуться ли преждние координаты
+            let arr_Coord = [];
+            for (let i = 0; i < arr_Ang.length; i++) {
+                let [x, y] = getCoordCtrlPoint(x0, y0, x1[0], y1[0], arr_Ang[i]);
+                arr_Coord.push([x, y]);
+            }
+
+            // 4 Получим ПРАВИЛЬНЫЙ знак угла (через уравнение прямой проходящ через 2 точки)
+            let arrDegSign = getArrWithDegSign(arr_Coord, x0, y0, x1, y1);
+
+            let arrPathClass = [];
+            namesPro.forEach(item => {
+                for (let i = 0; i < DATA.length; i++) {
+                    if (DATA[i].name == item) {
+                        if (DATA[i].mainSkill.includes(targetText.textContent)) {
+                            arrPathClass.push('path');
+                        } else if (DATA[i].otherSkill.includes(targetText.textContent)) {
+                            arrPathClass.push('pathOther');
                         }
-                    });
-                });
-                otherSkill.forEach(item => {
-                    document.querySelectorAll(".textSkill").forEach(i => {
-                        if (i.textContent == item) {
-                            let groupPro = i.closest("g");
-                            skillIdGroup[i.textContent] = groupPro.id;
-                        }
-                    });
-                });
-
-                let nearestGroupsArrBefore = Object.entries(nearestGroups);
-
-                // Удаляем дубликаты, чтоб не было лишних перемещений
-                for (let key in skillIdGroup) {
-                    if(key in nearestGroups) {
-                        delete nearestGroups[key];
-                        delete skillIdGroup[key];
                     }
+                    
                 }
-                
-                // Поменять местами текста
-                let nearestGroupsArr = Object.entries(nearestGroups);
-                let skillIdGroupArr = Object.entries(skillIdGroup);
-                for(let i = 0; i < skillIdGroupArr.length; i++) {
-                    let temp = nearestGroupsArr[i][0];
-                    nearestGroupsArr[i][0] = skillIdGroupArr[i][0];
-                    skillIdGroupArr[i][0] = temp;
-                    document.querySelector(`#${nearestGroupsArr[i][1]} div`).textContent = nearestGroupsArr[i][0];
-                    document.querySelector(`#${skillIdGroupArr[i][1]} div`).textContent = skillIdGroupArr[i][0];
-                }
+            });
 
-                // Массивы для формирования ПУТЕЙ
-                let x1 = [];
-                let y1 = [];
-                let namesPro = [];
+            // 5 Теперь, зная угол, можно знать в какую сторону отсчитывать угол
+            // большой управляющей точки для кривой Безье
 
-                // Выделим эти Навыки
-                nearestGroupsArrBefore.forEach(i => {
-                    document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotSkill_selected");
-                    document.querySelector(`#${i[1]} div`).setAttribute("class", "textSkill_selected");
-                
-                    x1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cx"));
-                    y1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cy"));
-                    namesPro.push(document.querySelector(`#${i[1]} div`).textContent);
+            // Построим кривые
+            for (let i = 0; i < arrDegSign.length; i++) {
+                // Рычаг размером 3/4 от отрезка
+                let BCx = (x0 + x1[i]*3)/4;
+                let BCy = (y0 + y1[i]*3)/4;
+                // Рычажок раземром 1/4 от отрезка
+                let LCx = (x0 + BCx)/2;
+                let LCy = (y0 + BCy)/2;
 
-                }); 
+                let degL = 5;
+                let degB = 5 + 13*i;
+                let [litCx, litCy] = getCoordCtrlPoint(x0, y0, LCx, LCy, degL*arrDegSign[i]*(-1));
+                let [bigCx, bigCy] = getCoordCtrlPoint(x0, y0, BCx, BCy, degB*arrDegSign[i]);
 
-                // Здесь прокладываем ПУТИ
-                // 1 
-                let x0 = xRing;
-                let y0 = yRing;
+                addPath(x0, y0, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
+            }
+        } else if (e.target.getAttribute("class") == "dotPro") {
+            e.target.setAttribute("class", "dotPro_selected");
 
-                // 2 
-                let arr_Ang = [];
-                for (let i = 0; i < x1.length; i++) {
-                    arr_Ang.push(getAlpha(x0, y0, x1[0], y1[0], x1[i], y1[i]));
-                }
+            let dx = 8;
+            let dy = 8;
+            let width = targetText.offsetWidth + dx;
+            let height = targetText.offsetHeight + dy;
+            let offset_x = dx/2;
+            let offset_y = dy/2;
+            let xRect = +targetText.parentNode.getAttribute("x") - offset_x;
+            let yRect = +targetText.parentNode.getAttribute("y") - offset_y;
+            addRect(xRect, yRect, width, height, 7, "rectPro");
 
-                // 3 
-                let arr_Coord = [];
-                for (let i = 0; i < arr_Ang.length; i++) {
-                    let [x, y] = getCoordCtrlPoint(x0, y0, x1[0], y1[0], arr_Ang[i]);
-                    arr_Coord.push([x, y]);
-                }
+            // Добавляем в массивы mainSkill и otherSkill те Навыки с которыми работает Профессия
+            let mainSkill = [];
+            let otherSkill = [];
+            let pro = DATA.filter(obj => obj.name == targetTextContent)[0];
+            mainSkill = pro['mainSkill']
+            if (pro.hasOwnProperty('otherSkill')) {
+                otherSkill = pro['otherSkill'];
+            }
 
-                // 4
-                let arrDegSign = getArrWithDegSign(arr_Coord, x0, y0, x1, y1)
+            // Получим близжайшие точки, узнаем их группы и какой в этих группах текст
+            let endArr = otherSkill.length + mainSkill.length;
+            let nearestDots = getNearestDots(e.target).slice(0, endArr);
+            let nearestGroups = {};
+            nearestDots.forEach(item => {
+                nearestGroups[document.querySelector(`#${item[1]} div`).textContent] = item[1];
+            });
 
-                let arrPathClass = [];
-                namesPro.forEach(item => {
-                    for (let i = 0; i < DATA.length; i++) {
-                        if (DATA[i].name == targetText.textContent) {
-                            if (DATA[i].mainSkill.includes(item)) {
-                                arrPathClass.push('path');
-                            } else if (DATA[i].otherSkill.includes(item)) {
-                                arrPathClass.push('pathOther');
-                            }
-                        }
-                        
+            // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
+            let skillIdGroup = {};
+            mainSkill.forEach(item => {
+                document.querySelectorAll(".textSkill").forEach(i => {
+                    if (i.textContent == item) {
+                        let groupPro = i.closest("g");
+                        skillIdGroup[i.textContent] = groupPro.id;
                     }
                 });
+            });
+            otherSkill.forEach(item => {
+                document.querySelectorAll(".textSkill").forEach(i => {
+                    if (i.textContent == item) {
+                        let groupPro = i.closest("g");
+                        skillIdGroup[i.textContent] = groupPro.id;
+                    }
+                });
+            });
 
-                // 5 
-                for (let i = 0; i < arrDegSign.length; i++) {
-                    let BCx = (x0 + x1[i]*3)/4;
-                    let BCy = (y0 + y1[i]*3)/4;
-                    let LCx = (x0 + BCx)/2;
-                    let LCy = (y0 + BCy)/2;
+            let nearestGroupsArrBefore = Object.entries(nearestGroups);
 
-                    let degL = 2;
-                    let degB = 5 + 2*i;
-                    let [litCx, litCy] = getCoordCtrlPoint(x0, y0, LCx, LCy, degL*arrDegSign[i]*(-1));
-                    let [bigCx, bigCy] = getCoordCtrlPoint(x0, y0, BCx, BCy, degB*arrDegSign[i]);
-
-                    addPath(x0, y0, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
+            // Удаляем дубликаты, чтоб не было лишних перемещений
+            for (let key in skillIdGroup) {
+                if(key in nearestGroups) {
+                    delete nearestGroups[key];
+                    delete skillIdGroup[key];
                 }
             }
-        });
+            
+            // Поменять местами текста
+            let nearestGroupsArr = Object.entries(nearestGroups);
+            let skillIdGroupArr = Object.entries(skillIdGroup);
+            for(let i = 0; i < skillIdGroupArr.length; i++) {
+                let temp = nearestGroupsArr[i][0];
+                nearestGroupsArr[i][0] = skillIdGroupArr[i][0];
+                skillIdGroupArr[i][0] = temp;
+                document.querySelector(`#${nearestGroupsArr[i][1]} div`).textContent = nearestGroupsArr[i][0];
+                document.querySelector(`#${skillIdGroupArr[i][1]} div`).textContent = skillIdGroupArr[i][0];
+            }
+
+            // Массивы для формирования ПУТЕЙ
+            let x1 = [];
+            let y1 = [];
+            let namesPro = [];
+
+            // Выделим эти Навыки
+            nearestGroupsArrBefore.forEach(i => {
+                document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotSkill_selected");
+                document.querySelector(`#${i[1]} div`).setAttribute("class", "textSkill_selected");
+            
+                x1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cx"));
+                y1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cy"));
+                namesPro.push(document.querySelector(`#${i[1]} div`).textContent);
+
+            }); 
+
+            addRing(xRing, yRing, 14, "proRing");
+
+            // Здесь прокладываем ПУТИ
+            // 1 
+            let x0 = xRing;
+            let y0 = yRing;
+
+            // 2 
+            let arr_Ang = [];
+            for (let i = 0; i < x1.length; i++) {
+                arr_Ang.push(getAlpha(x0, y0, x1[0], y1[0], x1[i], y1[i]));
+            }
+
+            // 3 
+            let arr_Coord = [];
+            for (let i = 0; i < arr_Ang.length; i++) {
+                let [x, y] = getCoordCtrlPoint(x0, y0, x1[0], y1[0], arr_Ang[i]);
+                arr_Coord.push([x, y]);
+            }
+
+            // 4
+            let arrDegSign = getArrWithDegSign(arr_Coord, x0, y0, x1, y1)
+
+            let arrPathClass = [];
+            namesPro.forEach(item => {
+                for (let i = 0; i < DATA.length; i++) {
+                    if (DATA[i].name == targetText.textContent) {
+                        if (DATA[i].mainSkill.includes(item)) {
+                            arrPathClass.push('path');
+                        } else if (DATA[i].otherSkill.includes(item)) {
+                            arrPathClass.push('pathOther');
+                        }
+                    }
+                    
+                }
+            });
+
+            // 5 
+            for (let i = 0; i < arrDegSign.length; i++) {
+                let BCx = (x0 + x1[i]*3)/4;
+                let BCy = (y0 + y1[i]*3)/4;
+                let LCx = (x0 + BCx)/2;
+                let LCy = (y0 + BCy)/2;
+
+                let degL = 2;
+                let degB = 5 + 2*i;
+                let [litCx, litCy] = getCoordCtrlPoint(x0, y0, LCx, LCy, degL*arrDegSign[i]*(-1));
+                let [bigCx, bigCy] = getCoordCtrlPoint(x0, y0, BCx, BCy, degB*arrDegSign[i]);
+
+                addPath(x0, y0, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
+            }
+
+        }
+
+        
+        
+
     });
 });
 
