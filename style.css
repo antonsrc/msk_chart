@@ -87,25 +87,25 @@ svg text{
     justify-content: center;
 }
 
-#proRing,
-#skillRing {
+.proRing,
+.skillRing {
     fill: #FFFFFF;
     cursor: pointer;
 }
 
-#skillRing {
+.skillRing {
     stroke: #FF7A00;
     animation: change_r_Skill 0.1s;
     animation-fill-mode: forwards;
 }
 
-#proRing {
+.proRing {
     stroke: #00A372;
     animation: change_r_pro 0.1s;
     animation-fill-mode: forwards;
 }
 
-#rectPro {
+.rectPro {
     fill: #FFFFFF;
     opacity: 0.7;
     stroke: #F4F4F4;

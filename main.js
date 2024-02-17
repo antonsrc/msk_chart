@@ -117,10 +117,11 @@ const proDotParams = {
 };
 
 const arrElementsForRemoving = [
-    "skillRing",
-    "proRing",
-    "rectPro",
-    "pathCurve"
+    ".proRing",
+    ".skillRing",
+    ".rectPro",
+    ".pathOther",
+    ".path"
 ];
 
 const objPathSkill = {};
@@ -138,43 +139,32 @@ for (let i = -90, j = 0; i < 270; i += degStepPro, j++) {
 
 window.addEventListener('load', () => {
     mainSVG.addEventListener('click', e => {
-        let targetText;
-        let targetTextContent;
-        let xRing;
-        let yRing;
-        if((e.target.parentNode.getAttribute("class") == "gPro") || (e.target.parentNode.getAttribute("class") == "gSkill")) {
+        let dot = e.target;
+        if(checkGroupOfDot(dot)) {
+            removePreviousEvents(arrElementsForRemoving);
             unselectAll();
-            targetText = document.querySelector(`#${e.target.parentNode.id} div`);
-            targetTextContent = targetText.textContent;
-            xRing = +e.target.getAttribute("cx");
-            yRing = +e.target.getAttribute("cy");
+        } else {
+            return;
         }
+        let dotText = document.querySelector(`#${dot.parentNode.id} div`);
+        let dotX = +dot.getAttribute("cx");
+        let dotY = +dot.getAttribute("cy");
 
-        if (e.target.getAttribute("class") == "dotSkill") {
-            e.target.setAttribute("class", "dotSkill_selected");
-            targetText.setAttribute("class", "textSkill_selected");
+        if (dot.matches(".dotSkill")) {
+            dot.setAttribute("class", "dotSkill_selected");
+            dotText.setAttribute("class", "textSkill_selected");
+            addRing(dotX, dotY, 14, "skillRing");
 
-            let selectedPro = [];
-            // Добавляем в массив selectedPro те Профессии которые работают с определенным Навыком
-            DATA.forEach(item => {
-                if (item['mainSkill'].includes(targetTextContent)) {
-                    selectedPro.push(item.name);
-                }
-                if (item['otherSkill'].includes(targetTextContent)) {
-                    selectedPro.push(item.name);
-                }
-            });
-            
-            // Получим близжайшие точки, узнаем их группы и какой в этих группах текст
-            let nearestDots = getNearestDots(e.target).slice(0, selectedPro.length);
-            let nearestGroups = {};
-            nearestDots.forEach(item => {
-                nearestGroups[document.querySelector(`#${item[1]} div`).textContent] = item[1];
+            let selectedSlaveDots = getArrOfProDots(dot);
+            let nearestSlaveGroups = {};
+            getNearestSlaveDots(dot, selectedSlaveDots.length).forEach(item => {
+                let text = document.querySelector(`#${item} div`).textContent;
+                nearestSlaveGroups[text] = item;
             });
 
             // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
             let proIdGroup = {};
-            selectedPro.forEach(item => {
+            selectedSlaveDots.forEach(item => {
                 document.querySelectorAll(".textPro").forEach(i => {
                     if(i.textContent == item) {
                         let groupSkill = i.closest("g");
@@ -183,18 +173,18 @@ window.addEventListener('load', () => {
                 });
             });
 
-            let nearestGroupsArrBefore = Object.entries(nearestGroups);
+            let nearestGroupsArrBefore = Object.entries(nearestSlaveGroups);
 
             // Удаляем дубликаты, чтоб не было лишних перемещений
             for (let key in proIdGroup) {
-                if(key in nearestGroups) {
-                    delete nearestGroups[key];
+                if(key in nearestSlaveGroups) {
+                    delete nearestSlaveGroups[key];
                     delete proIdGroup[key];
                 }
             }
 
             // Меняем местами текст
-            let nearestGroupsArr = Object.entries(nearestGroups);
+            let nearestGroupsArr = Object.entries(nearestSlaveGroups);
             let proIdGroupArr = Object.entries(proIdGroup);
             for(let i = 0; i < proIdGroupArr.length; i++) {
                 let temp = nearestGroupsArr[i][0];
@@ -235,38 +225,34 @@ window.addEventListener('load', () => {
 
             });
 
-            addRing(xRing, yRing, 14, "skillRing");
-
             // Здесь прокладываем ПУТИ
-            // 1 Имеем Базовый узел x0y0 и набор точек
+            // 1 Имеем Базовый узел dotXdotY и набор точек
             // Первая точка из набора составляет второй конец Базового отрезка
-            let x0 = xRing;
-            let y0 = yRing;
 
             // 2 Найдем углы полученные между Базовой линией и всеми другими линиями
             // которые из массивов x1 y1
             let arr_Ang = [];
             for (let i = 0; i < x1.length; i++) {
-                arr_Ang.push(getAlpha(x0, y0, x1[0], y1[0], x1[i], y1[i]));
+                arr_Ang.push(getAlpha(dotX, dotY, x1[0], y1[0], x1[i], y1[i]));
             }
 
             // 3 Имея эти углы и Базовую линию, проверим, вернуться ли преждние координаты
             let arr_Coord = [];
             for (let i = 0; i < arr_Ang.length; i++) {
-                let [x, y] = getCoordCtrlPoint(x0, y0, x1[0], y1[0], arr_Ang[i]);
+                let [x, y] = getCoordCtrlPoint(dotX, dotY, x1[0], y1[0], arr_Ang[i]);
                 arr_Coord.push([x, y]);
             }
 
             // 4 Получим ПРАВИЛЬНЫЙ знак угла (через уравнение прямой проходящ через 2 точки)
-            let arrDegSign = getArrWithDegSign(arr_Coord, x0, y0, x1, y1);
+            let arrDegSign = getArrWithDegSign(arr_Coord, dotX, dotY, x1, y1);
 
             let arrPathClass = [];
             namesPro.forEach(item => {
                 for (let i = 0; i < DATA.length; i++) {
                     if (DATA[i].name == item) {
-                        if (DATA[i].mainSkill.includes(targetText.textContent)) {
+                        if (DATA[i].mainSkill.includes(dotText.textContent)) {
                             arrPathClass.push('path');
-                        } else if (DATA[i].otherSkill.includes(targetText.textContent)) {
+                        } else if (DATA[i].otherSkill.includes(dotText.textContent)) {
                             arrPathClass.push('pathOther');
                         }
                     }
@@ -280,47 +266,49 @@ window.addEventListener('load', () => {
             // Построим кривые
             for (let i = 0; i < arrDegSign.length; i++) {
                 // Рычаг размером 3/4 от отрезка
-                let BCx = (x0 + x1[i]*3)/4;
-                let BCy = (y0 + y1[i]*3)/4;
+                let BCx = (dotX + x1[i]*3)/4;
+                let BCy = (dotY + y1[i]*3)/4;
                 // Рычажок раземром 1/4 от отрезка
-                let LCx = (x0 + BCx)/2;
-                let LCy = (y0 + BCy)/2;
+                let LCx = (dotX + BCx)/2;
+                let LCy = (dotY + BCy)/2;
 
                 let degL = 5;
                 let degB = 5 + 13*i;
-                let [litCx, litCy] = getCoordCtrlPoint(x0, y0, LCx, LCy, degL*arrDegSign[i]*(-1));
-                let [bigCx, bigCy] = getCoordCtrlPoint(x0, y0, BCx, BCy, degB*arrDegSign[i]);
+                let [litCx, litCy] = getCoordCtrlPoint(dotX, dotY, LCx, LCy, degL*arrDegSign[i]*(-1));
+                let [bigCx, bigCy] = getCoordCtrlPoint(dotX, dotY, BCx, BCy, degB*arrDegSign[i]);
 
-                addPath(x0, y0, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
+                addPath(dotX, dotY, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
             }
-        } else if (e.target.getAttribute("class") == "dotPro") {
-            e.target.setAttribute("class", "dotPro_selected");
+        } else if (dot.matches(".dotPro")) {
+            dot.setAttribute("class", "dotPro_selected");
 
             let dx = 8;
             let dy = 8;
-            let width = targetText.offsetWidth + dx;
-            let height = targetText.offsetHeight + dy;
+            let width = dotText.offsetWidth + dx;
+            let height = dotText.offsetHeight + dy;
             let offset_x = dx/2;
             let offset_y = dy/2;
-            let xRect = +targetText.parentNode.getAttribute("x") - offset_x;
-            let yRect = +targetText.parentNode.getAttribute("y") - offset_y;
+            let xRect = +dotText.parentNode.getAttribute("x") - offset_x;
+            let yRect = +dotText.parentNode.getAttribute("y") - offset_y;
             addRect(xRect, yRect, width, height, 7, "rectPro");
-
+            addRing(dotX, dotY, 14, "proRing");
+            
             // Добавляем в массивы mainSkill и otherSkill те Навыки с которыми работает Профессия
             let mainSkill = [];
             let otherSkill = [];
+
+            let targetTextContent = dotText.textContent;
+
             let pro = DATA.filter(obj => obj.name == targetTextContent)[0];
             mainSkill = pro['mainSkill']
             if (pro.hasOwnProperty('otherSkill')) {
                 otherSkill = pro['otherSkill'];
             }
 
-            // Получим близжайшие точки, узнаем их группы и какой в этих группах текст
-            let endArr = otherSkill.length + mainSkill.length;
-            let nearestDots = getNearestDots(e.target).slice(0, endArr);
-            let nearestGroups = {};
-            nearestDots.forEach(item => {
-                nearestGroups[document.querySelector(`#${item[1]} div`).textContent] = item[1];
+            let nearestSlaveGroups = {};
+            getNearestSlaveDots(dot, otherSkill.length + mainSkill.length).forEach(item => {
+                let text = document.querySelector(`#${item} div`).textContent;
+                nearestSlaveGroups[text] = item;
             });
 
             // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
@@ -342,18 +330,18 @@ window.addEventListener('load', () => {
                 });
             });
 
-            let nearestGroupsArrBefore = Object.entries(nearestGroups);
+            let nearestGroupsArrBefore = Object.entries(nearestSlaveGroups);
 
             // Удаляем дубликаты, чтоб не было лишних перемещений
             for (let key in skillIdGroup) {
-                if(key in nearestGroups) {
-                    delete nearestGroups[key];
+                if(key in nearestSlaveGroups) {
+                    delete nearestSlaveGroups[key];
                     delete skillIdGroup[key];
                 }
             }
             
             // Поменять местами текста
-            let nearestGroupsArr = Object.entries(nearestGroups);
+            let nearestGroupsArr = Object.entries(nearestSlaveGroups);
             let skillIdGroupArr = Object.entries(skillIdGroup);
             for(let i = 0; i < skillIdGroupArr.length; i++) {
                 let temp = nearestGroupsArr[i][0];
@@ -379,33 +367,26 @@ window.addEventListener('load', () => {
 
             }); 
 
-            addRing(xRing, yRing, 14, "proRing");
-
-            // Здесь прокладываем ПУТИ
-            // 1 
-            let x0 = xRing;
-            let y0 = yRing;
-
             // 2 
             let arr_Ang = [];
             for (let i = 0; i < x1.length; i++) {
-                arr_Ang.push(getAlpha(x0, y0, x1[0], y1[0], x1[i], y1[i]));
+                arr_Ang.push(getAlpha(dotX, dotY, x1[0], y1[0], x1[i], y1[i]));
             }
 
             // 3 
             let arr_Coord = [];
             for (let i = 0; i < arr_Ang.length; i++) {
-                let [x, y] = getCoordCtrlPoint(x0, y0, x1[0], y1[0], arr_Ang[i]);
+                let [x, y] = getCoordCtrlPoint(dotX, dotY, x1[0], y1[0], arr_Ang[i]);
                 arr_Coord.push([x, y]);
             }
 
             // 4
-            let arrDegSign = getArrWithDegSign(arr_Coord, x0, y0, x1, y1)
+            let arrDegSign = getArrWithDegSign(arr_Coord, dotX, dotY, x1, y1)
 
             let arrPathClass = [];
             namesPro.forEach(item => {
                 for (let i = 0; i < DATA.length; i++) {
-                    if (DATA[i].name == targetText.textContent) {
+                    if (DATA[i].name == dotText.textContent) {
                         if (DATA[i].mainSkill.includes(item)) {
                             arrPathClass.push('path');
                         } else if (DATA[i].otherSkill.includes(item)) {
@@ -418,24 +399,19 @@ window.addEventListener('load', () => {
 
             // 5 
             for (let i = 0; i < arrDegSign.length; i++) {
-                let BCx = (x0 + x1[i]*3)/4;
-                let BCy = (y0 + y1[i]*3)/4;
-                let LCx = (x0 + BCx)/2;
-                let LCy = (y0 + BCy)/2;
+                let BCx = (dotX + x1[i]*3)/4;
+                let BCy = (dotY + y1[i]*3)/4;
+                let LCx = (dotX + BCx)/2;
+                let LCy = (dotY + BCy)/2;
 
                 let degL = 2;
                 let degB = 5 + 2*i;
-                let [litCx, litCy] = getCoordCtrlPoint(x0, y0, LCx, LCy, degL*arrDegSign[i]*(-1));
-                let [bigCx, bigCy] = getCoordCtrlPoint(x0, y0, BCx, BCy, degB*arrDegSign[i]);
+                let [litCx, litCy] = getCoordCtrlPoint(dotX, dotY, LCx, LCy, degL*arrDegSign[i]*(-1));
+                let [bigCx, bigCy] = getCoordCtrlPoint(dotX, dotY, BCx, BCy, degB*arrDegSign[i]);
 
-                addPath(x0, y0, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
+                addPath(dotX, dotY, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
             }
-
         }
-
-        
-        
-
     });
 });
 
@@ -447,23 +423,23 @@ function addDot(dotName, dotParams, dotSize, textData, i, deg, rShift) {
     addText(xText, yText, `text${dotName}`, textData[i], g);
 }
 
-function addRing(x, y, r, id) {
+function addRing(x, y, r, class_name) {
     let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     element.setAttribute("cx", x);
     element.setAttribute("cy", y);
     element.setAttribute("r", r);
-    element.setAttribute("id", id);
+    element.setAttribute("class", class_name);
     proCircle.after(element);
 }
 
-function addRect(x, y, w, h, rx, id) {
+function addRect(x, y, w, h, rx, class_name) {
     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     rect.setAttribute("x", x);
     rect.setAttribute("y", y);
     rect.setAttribute("width", w);
     rect.setAttribute("height", h);
     rect.setAttribute("rx", rx);
-    rect.setAttribute("id", id);
+    rect.setAttribute("class", class_name);
     proCircle.after(rect);
 }
 
@@ -489,7 +465,6 @@ function addPath(x0, y0, xc1, yc1, xc2, yc2, x1, y1, class_name) {
     let d = `M ${x0} ${y0} C ${xc1} ${yc1} ${xc2} ${yc2} ${x1} ${y1}`;
     path.setAttribute("d", d);
     path.setAttribute("class", class_name);
-    path.setAttribute("id", "pathCurve");
     proCircle.after(path);
 }
 
@@ -574,7 +549,7 @@ function getLength(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2));
 }
 
-function getNearestDots(selectedDot) {
+function getNearestSlaveDots(selectedDot, amount) {
     let xP = +selectedDot.getAttribute("cx");
     let yP = +selectedDot.getAttribute("cy");
     let lengthArr = [];
@@ -592,7 +567,9 @@ function getNearestDots(selectedDot) {
         }
     }
     lengthArr.sort((a, b) => a[0] - b[0]);
-    return lengthArr;
+
+    let arrOfGropuNames = lengthArr.map(i => i[1]);
+    return arrOfGropuNames.slice(0, amount);
 }
 
 function getArrWithDegSign(arr_Coord, x0, y0, x1, y1) {
@@ -620,18 +597,33 @@ function getArrWithDegSign(arr_Coord, x0, y0, x1, y1) {
     return arrDegSign;
 }
 
-function removeLastEvents(arr) {
+function removePreviousEvents(arr) {
     arr.forEach(item => {
-        let element = document.getElementById(item);
-        if (document.body.contains(element)) {
-            element.remove();
-        }
+        document.querySelectorAll(item).forEach(i => i.remove());
     });
 }
 
 function unselectAll() {
     document.querySelectorAll("[class$='_selected']").forEach(item => {
         item.setAttribute("class", item.getAttribute("class").slice(0,-9));
-        removeLastEvents(arrElementsForRemoving);
     });
+}
+
+function checkGroupOfDot(dot) {
+    let dotGroupClass = dot.parentNode.getAttribute("class");
+    return (dotGroupClass == "gPro" || dotGroupClass == "gSkill") ? true : false;
+}
+
+function getArrOfProDots(dot) {
+    let arr = [];
+    let text = document.querySelector(`#${dot.parentNode.id} div`).textContent;
+    DATA.forEach(item => {
+        if (item['mainSkill'].includes(text)) {
+            arr.push(item.name);
+        }
+        if (item.hasOwnProperty('otherSkill') && item['otherSkill'].includes(text)) {
+            arr.push(item.name);
+        }
+    });
+    return arr;
 }
