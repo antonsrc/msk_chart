@@ -157,7 +157,7 @@ window.addEventListener('load', () => {
 
             let selectedSlaveDots = getArrOfProDots(dot);
             let nearestSlaveGroups = {};
-            getNearestSlaveDots(dot, selectedSlaveDots.length).forEach(item => {
+            nearestSlaveDotsRelativeDot(dot, selectedSlaveDots.length).forEach(item => {
                 let text = document.querySelector(`#${item} div`).textContent;
                 nearestSlaveGroups[text] = item;
             });
@@ -281,47 +281,19 @@ window.addEventListener('load', () => {
             }
         } else if (dot.matches(".dotPro")) {
             dot.setAttribute("class", "dotPro_selected");
-
-            let dx = 8;
-            let dy = 8;
-            let width = dotText.offsetWidth + dx;
-            let height = dotText.offsetHeight + dy;
-            let offset_x = dx/2;
-            let offset_y = dy/2;
-            let xRect = +dotText.parentNode.getAttribute("x") - offset_x;
-            let yRect = +dotText.parentNode.getAttribute("y") - offset_y;
-            addRect(xRect, yRect, width, height, 7, "rectPro");
+            addRect(getRectCoord(dotText), 7, "rectPro");
             addRing(dotX, dotY, 14, "proRing");
             
-            // Добавляем в массивы mainSkill и otherSkill те Навыки с которыми работает Профессия
-            let mainSkill = [];
-            let otherSkill = [];
-
-            let targetTextContent = dotText.textContent;
-
-            let pro = DATA.filter(obj => obj.name == targetTextContent)[0];
-            mainSkill = pro['mainSkill']
-            if (pro.hasOwnProperty('otherSkill')) {
-                otherSkill = pro['otherSkill'];
-            }
-
+            let selectedSlaveDots = getArrOfSkillDots(dot);
             let nearestSlaveGroups = {};
-            getNearestSlaveDots(dot, otherSkill.length + mainSkill.length).forEach(item => {
+            nearestSlaveDotsRelativeDot(dot, selectedSlaveDots.length).forEach(item => {
                 let text = document.querySelector(`#${item} div`).textContent;
                 nearestSlaveGroups[text] = item;
             });
 
             // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
             let skillIdGroup = {};
-            mainSkill.forEach(item => {
-                document.querySelectorAll(".textSkill").forEach(i => {
-                    if (i.textContent == item) {
-                        let groupPro = i.closest("g");
-                        skillIdGroup[i.textContent] = groupPro.id;
-                    }
-                });
-            });
-            otherSkill.forEach(item => {
+            selectedSlaveDots.forEach(item => {
                 document.querySelectorAll(".textSkill").forEach(i => {
                     if (i.textContent == item) {
                         let groupPro = i.closest("g");
@@ -432,8 +404,9 @@ function addRing(x, y, r, class_name) {
     proCircle.after(element);
 }
 
-function addRect(x, y, w, h, rx, class_name) {
+function addRect(arr, rx, class_name) {
     let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    let [x, y, w, h] = arr;
     rect.setAttribute("x", x);
     rect.setAttribute("y", y);
     rect.setAttribute("width", w);
@@ -549,7 +522,7 @@ function getLength(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2));
 }
 
-function getNearestSlaveDots(selectedDot, amount) {
+function nearestSlaveDotsRelativeDot(selectedDot, amount) {
     let xP = +selectedDot.getAttribute("cx");
     let yP = +selectedDot.getAttribute("cy");
     let lengthArr = [];
@@ -567,7 +540,6 @@ function getNearestSlaveDots(selectedDot, amount) {
         }
     }
     lengthArr.sort((a, b) => a[0] - b[0]);
-
     let arrOfGropuNames = lengthArr.map(i => i[1]);
     return arrOfGropuNames.slice(0, amount);
 }
@@ -625,5 +597,27 @@ function getArrOfProDots(dot) {
             arr.push(item.name);
         }
     });
+    return arr;
+}
+
+function getRectCoord(text) {
+    let dx = 8;
+    let dy = 8;
+    let width = text.offsetWidth + dx;
+    let height = text.offsetHeight + dy;
+    let offset_x = dx/2;
+    let offset_y = dy/2;
+    let xRect = +text.parentNode.getAttribute("x") - offset_x;
+    let yRect = +text.parentNode.getAttribute("y") - offset_y;
+    return [xRect, yRect, width, height];
+}
+
+function getArrOfSkillDots(dot) {
+    let arr = [];
+    let text = document.querySelector(`#${dot.parentNode.id} div`).textContent;
+    let pro = DATA.filter(obj => obj.name == text)[0];
+    if (pro.hasOwnProperty('otherSkill')) {
+        arr = pro['mainSkill'].concat(pro['otherSkill']);
+    }
     return arr;
 }
