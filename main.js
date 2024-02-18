@@ -155,37 +155,25 @@ window.addEventListener('load', () => {
             dotText.setAttribute("class", "textSkill_selected");
             addRing(dotX, dotY, 14, "skillRing");
 
-            let selectedSlaveDots = getArrOfProDots(dot);
-            let nearestSlaveGroups = {};
-            nearestSlaveDotsRelativeDot(dot, selectedSlaveDots.length).forEach(item => {
-                let text = document.querySelector(`#${item} div`).textContent;
-                nearestSlaveGroups[text] = item;
-            });
-
-            // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
-            let proIdGroup = {};
-            selectedSlaveDots.forEach(item => {
+            let textOfSlaveDotsArr = getArrOfProDots(dot);
+            let slaveGroups = {};
+            textOfSlaveDotsArr.forEach(item => {
                 document.querySelectorAll(".textPro").forEach(i => {
                     if(i.textContent == item) {
                         let groupSkill = i.closest("g");
-                        proIdGroup[i.textContent] = groupSkill.id;
+                        slaveGroups[i.textContent] = groupSkill.id;
                     }
                 });
             });
 
-            let nearestGroupsArrBefore = Object.entries(nearestSlaveGroups);
+            let slaveGroupsNearest = nearestSlaveDots(dot, textOfSlaveDotsArr.length);
+            let nearestSlaveGroupsArr = Object.entries(slaveGroupsNearest);
 
-            // Удаляем дубликаты, чтоб не было лишних перемещений
-            for (let key in proIdGroup) {
-                if(key in nearestSlaveGroups) {
-                    delete nearestSlaveGroups[key];
-                    delete proIdGroup[key];
-                }
-            }
+            let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(slaveGroups, slaveGroupsNearest);
 
             // Меняем местами текст
-            let nearestGroupsArr = Object.entries(nearestSlaveGroups);
-            let proIdGroupArr = Object.entries(proIdGroup);
+            let nearestGroupsArr = Object.entries(slaveGroupsNearestFiltered);
+            let proIdGroupArr = Object.entries(slaveGroupsFiltered);
             for(let i = 0; i < proIdGroupArr.length; i++) {
                 let temp = nearestGroupsArr[i][0];
                 nearestGroupsArr[i][0] = proIdGroupArr[i][0];
@@ -215,7 +203,7 @@ window.addEventListener('load', () => {
             let namesPro = [];
 
             // Выделим эти Профессии
-            nearestGroupsArrBefore.forEach(i => {
+            nearestSlaveGroupsArr.forEach(i => {
                 document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotPro_selected");
                 document.querySelector(`#${i[1]} div`).setAttribute("class", "textPro_selected");
 
@@ -284,37 +272,25 @@ window.addEventListener('load', () => {
             addRect(getRectCoord(dotText), 7, "rectPro");
             addRing(dotX, dotY, 14, "proRing");
             
-            let selectedSlaveDots = getArrOfSkillDots(dot);
-            let nearestSlaveGroups = {};
-            nearestSlaveDotsRelativeDot(dot, selectedSlaveDots.length).forEach(item => {
-                let text = document.querySelector(`#${item} div`).textContent;
-                nearestSlaveGroups[text] = item;
-            });
-
-            // Найдем Навыки и занесем их во временный объект {Навык: idГруппы}
-            let skillIdGroup = {};
-            selectedSlaveDots.forEach(item => {
+            let textOfSlaveDotsArr = getArrOfSkillDots(dot);
+            let slaveGroups = {};
+            textOfSlaveDotsArr.forEach(item => {
                 document.querySelectorAll(".textSkill").forEach(i => {
                     if (i.textContent == item) {
                         let groupPro = i.closest("g");
-                        skillIdGroup[i.textContent] = groupPro.id;
+                        slaveGroups[i.textContent] = groupPro.id;
                     }
                 });
             });
-
-            let nearestGroupsArrBefore = Object.entries(nearestSlaveGroups);
-
-            // Удаляем дубликаты, чтоб не было лишних перемещений
-            for (let key in skillIdGroup) {
-                if(key in nearestSlaveGroups) {
-                    delete nearestSlaveGroups[key];
-                    delete skillIdGroup[key];
-                }
-            }
             
+            let slaveGroupsNearest = nearestSlaveDots(dot, textOfSlaveDotsArr.length);
+            let nearestSlaveGroupsArr = Object.entries(slaveGroupsNearest);
+
+            let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(slaveGroups, slaveGroupsNearest);
+
             // Поменять местами текста
-            let nearestGroupsArr = Object.entries(nearestSlaveGroups);
-            let skillIdGroupArr = Object.entries(skillIdGroup);
+            let nearestGroupsArr = Object.entries(slaveGroupsNearestFiltered);
+            let skillIdGroupArr = Object.entries(slaveGroupsFiltered);
             for(let i = 0; i < skillIdGroupArr.length; i++) {
                 let temp = nearestGroupsArr[i][0];
                 nearestGroupsArr[i][0] = skillIdGroupArr[i][0];
@@ -329,7 +305,7 @@ window.addEventListener('load', () => {
             let namesPro = [];
 
             // Выделим эти Навыки
-            nearestGroupsArrBefore.forEach(i => {
+            nearestSlaveGroupsArr.forEach(i => {
                 document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotSkill_selected");
                 document.querySelector(`#${i[1]} div`).setAttribute("class", "textSkill_selected");
             
@@ -522,7 +498,7 @@ function getLength(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2));
 }
 
-function nearestSlaveDotsRelativeDot(selectedDot, amount) {
+function nearestSlaveDots(selectedDot, amount) {
     let xP = +selectedDot.getAttribute("cx");
     let yP = +selectedDot.getAttribute("cy");
     let lengthArr = [];
@@ -541,7 +517,14 @@ function nearestSlaveDotsRelativeDot(selectedDot, amount) {
     }
     lengthArr.sort((a, b) => a[0] - b[0]);
     let arrOfGropuNames = lengthArr.map(i => i[1]);
-    return arrOfGropuNames.slice(0, amount);
+
+    let slaveGroupsNearest = {};
+    arrOfGropuNames.slice(0, amount).forEach(item => {
+        let text = document.querySelector(`#${item} div`).textContent;
+        slaveGroupsNearest[text] = item;
+    });
+
+    return slaveGroupsNearest;
 }
 
 function getArrWithDegSign(arr_Coord, x0, y0, x1, y1) {
@@ -620,4 +603,16 @@ function getArrOfSkillDots(dot) {
         arr = pro['mainSkill'].concat(pro['otherSkill']);
     }
     return arr;
+}
+
+function removeDuplicateKeys(obj1, obj2) {
+    let obj1Filtered = structuredClone(obj1);
+    let obj2Filtered = structuredClone(obj2);
+    for (let key in obj1Filtered) {
+        if(key in obj2Filtered) {
+            delete obj2Filtered[key];
+            delete obj1Filtered[key];
+        }
+    }
+    return [obj1Filtered, obj2Filtered];
 }
