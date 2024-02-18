@@ -3,7 +3,7 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
-svg text{
+svg div{
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;

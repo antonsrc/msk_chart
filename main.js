@@ -155,47 +155,7 @@ window.addEventListener('load', () => {
             dotText.setAttribute("class", "textSkill_selected");
             addRing(dotX, dotY, 14, "skillRing");
 
-            let textOfSlaveDotsArr = getArrOfProDots(dot);
-            let slaveGroups = {};
-            textOfSlaveDotsArr.forEach(item => {
-                document.querySelectorAll(".textPro").forEach(i => {
-                    if(i.textContent == item) {
-                        let groupSkill = i.closest("g");
-                        slaveGroups[i.textContent] = groupSkill.id;
-                    }
-                });
-            });
-
-            let slaveGroupsNearest = nearestSlaveDots(dot, textOfSlaveDotsArr.length);
-            let nearestSlaveGroupsArr = Object.entries(slaveGroupsNearest);
-
-            let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(slaveGroups, slaveGroupsNearest);
-
-            // Меняем местами текст
-            let nearestGroupsArr = Object.entries(slaveGroupsNearestFiltered);
-            let proIdGroupArr = Object.entries(slaveGroupsFiltered);
-            for(let i = 0; i < proIdGroupArr.length; i++) {
-                let temp = nearestGroupsArr[i][0];
-                nearestGroupsArr[i][0] = proIdGroupArr[i][0];
-                proIdGroupArr[i][0] = temp;
-
-                let wN = +document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("width");
-                let hN = +document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).getAttribute("height");
-                let tempW = wN;
-                let tempH = hN;
-
-                let wS = +document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("width");
-                let hS = +document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).getAttribute("height");
-
-                document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).setAttribute("width", wS);
-                document.querySelector(`#${nearestGroupsArr[i][1]} foreignObject`).setAttribute("height", hS);
-
-                document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).setAttribute("width", tempW);
-                document.querySelector(`#${proIdGroupArr[i][1]} foreignObject`).setAttribute("height", tempH);
-
-                document.querySelector(`#${nearestGroupsArr[i][1]} div`).textContent = nearestGroupsArr[i][0];
-                document.querySelector(`#${proIdGroupArr[i][1]} div`).textContent = proIdGroupArr[i][0];
-            }
+            let nearestSlaveGroupsArr = moveContent(dot, ".textPro");
 
             // Массивы для формирования ПУТЕЙ
             let x1 = [];
@@ -272,32 +232,7 @@ window.addEventListener('load', () => {
             addRect(getRectCoord(dotText), 7, "rectPro");
             addRing(dotX, dotY, 14, "proRing");
             
-            let textOfSlaveDotsArr = getArrOfSkillDots(dot);
-            let slaveGroups = {};
-            textOfSlaveDotsArr.forEach(item => {
-                document.querySelectorAll(".textSkill").forEach(i => {
-                    if (i.textContent == item) {
-                        let groupPro = i.closest("g");
-                        slaveGroups[i.textContent] = groupPro.id;
-                    }
-                });
-            });
-            
-            let slaveGroupsNearest = nearestSlaveDots(dot, textOfSlaveDotsArr.length);
-            let nearestSlaveGroupsArr = Object.entries(slaveGroupsNearest);
-
-            let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(slaveGroups, slaveGroupsNearest);
-
-            // Поменять местами текста
-            let nearestGroupsArr = Object.entries(slaveGroupsNearestFiltered);
-            let skillIdGroupArr = Object.entries(slaveGroupsFiltered);
-            for(let i = 0; i < skillIdGroupArr.length; i++) {
-                let temp = nearestGroupsArr[i][0];
-                nearestGroupsArr[i][0] = skillIdGroupArr[i][0];
-                skillIdGroupArr[i][0] = temp;
-                document.querySelector(`#${nearestGroupsArr[i][1]} div`).textContent = nearestGroupsArr[i][0];
-                document.querySelector(`#${skillIdGroupArr[i][1]} div`).textContent = skillIdGroupArr[i][0];
-            }
+            let nearestSlaveGroupsArr = moveContent(dot, ".textSkill");
 
             // Массивы для формирования ПУТЕЙ
             let x1 = [];
@@ -615,4 +550,68 @@ function removeDuplicateKeys(obj1, obj2) {
         }
     }
     return [obj1Filtered, obj2Filtered];
+}
+
+function getObjOfContentToGroupId(arr, selector) {
+    let slaveGroups = {};
+    arr.forEach(item => {
+        document.querySelectorAll(selector).forEach(i => {
+            if(i.textContent == item) {
+                let group = i.closest("g");
+                slaveGroups[i.textContent] = group.id;
+            }
+        });
+    });
+    return slaveGroups;
+}
+
+function replaceContent(i, arr1, arr2) {
+    let temp = arr1[i][0];
+    arr1[i][0] = arr2[i][0];
+    arr2[i][0] = temp;
+
+    let foreignElemNearest = document.querySelector(`#${arr1[i][1]} foreignObject`);
+    let foreignElem = document.querySelector(`#${arr2[i][1]} foreignObject`);
+    foreignElemNearest.firstChild.textContent = arr1[i][0];
+    foreignElem.firstChild.textContent = arr2[i][0];
+}
+
+function replaceContentParams(i, arr1, arr2) {
+    let foreignElemNearest = document.querySelector(`#${arr1[i][1]} foreignObject`);
+    let foreignElem = document.querySelector(`#${arr2[i][1]} foreignObject`);
+
+    let tempW = +foreignElemNearest.getAttribute("width");
+    let tempH = +foreignElemNearest.getAttribute("height");
+    let wS = +foreignElem.getAttribute("width");
+    let hS = +foreignElem.getAttribute("height");
+
+    foreignElemNearest.setAttribute("width", wS);
+    foreignElemNearest.setAttribute("height", hS);
+    foreignElem.setAttribute("width", tempW);
+    foreignElem.setAttribute("height", tempH);
+}
+
+function moveContent(dot, selector) {
+    let textOfSlaveDotsArr = (selector == ".textPro") ? getArrOfProDots(dot) : getArrOfSkillDots(dot);
+    let slaveGroups = getObjOfContentToGroupId(textOfSlaveDotsArr, selector);
+
+    let slaveGroupsNearest = nearestSlaveDots(dot, textOfSlaveDotsArr.length);
+    let nearestSlaveGroupsArr = Object.entries(slaveGroupsNearest);
+
+    let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(slaveGroups, slaveGroupsNearest);
+    let slaveGroupsNearestArr = Object.entries(slaveGroupsNearestFiltered);
+    let slaveGroupsArr = Object.entries(slaveGroupsFiltered);
+
+    if (selector == ".textPro") {
+        for(let i = 0; i < slaveGroupsArr.length; i++) {
+            replaceContent(i, slaveGroupsNearestArr, slaveGroupsArr);
+            replaceContentParams(i, slaveGroupsNearestArr, slaveGroupsArr);
+        }
+    } else if (selector == ".textSkill") {
+        for(let i = 0; i < slaveGroupsArr.length; i++) {
+            replaceContent(i, slaveGroupsNearestArr, slaveGroupsArr);
+        }
+    }
+
+    return nearestSlaveGroupsArr;
 }
