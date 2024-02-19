@@ -116,7 +116,7 @@ const proDotParams = {
     'r': +proCircle.getAttribute("r")
 };
 
-const arrElementsForRemoving = [
+const elementsForRemoving = [
     ".proRing",
     ".skillRing",
     ".rectPro",
@@ -140,15 +140,15 @@ for (let i = -90, j = 0; i < 270; i += degStepPro, j++) {
 window.addEventListener('load', () => {
     mainSVG.addEventListener('click', e => {
         let dot = e.target;
+        let dotText = document.querySelector(`#${dot.parentNode.id} div`);
+        let dotX = +dot.getAttribute("cx");
+        let dotY = +dot.getAttribute("cy");
         if(checkGroupOfDot(dot)) {
-            removePreviousEvents(arrElementsForRemoving);
+            removePreviousEvents(elementsForRemoving);
             unselectAll();
         } else {
             return;
         }
-        let dotText = document.querySelector(`#${dot.parentNode.id} div`);
-        let dotX = +dot.getAttribute("cx");
-        let dotY = +dot.getAttribute("cy");
 
         if (dot.matches(".dotSkill")) {
             dot.setAttribute("class", "dotSkill_selected");
@@ -156,22 +156,7 @@ window.addEventListener('load', () => {
             addRing(dotX, dotY, 14, "skillRing");
 
             let nearestSlaveGroupsArr = moveContent(dot, ".textPro");
-
-            // Массивы для формирования ПУТЕЙ
-            let x1 = [];
-            let y1 = [];
-            let namesPro = [];
-
-            // Выделим эти Профессии
-            nearestSlaveGroupsArr.forEach(i => {
-                document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotPro_selected");
-                document.querySelector(`#${i[1]} div`).setAttribute("class", "textPro_selected");
-
-                x1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cx"));
-                y1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cy"));
-                namesPro.push(document.querySelector(`#${i[1]} div`).textContent);
-
-            });
+            let [namesPro, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
 
             // Здесь прокладываем ПУТИ
             // 1 Имеем Базовый узел dotXdotY и набор точек
@@ -204,7 +189,6 @@ window.addEventListener('load', () => {
                             arrPathClass.push('pathOther');
                         }
                     }
-                    
                 }
             });
 
@@ -233,22 +217,7 @@ window.addEventListener('load', () => {
             addRing(dotX, dotY, 14, "proRing");
             
             let nearestSlaveGroupsArr = moveContent(dot, ".textSkill");
-
-            // Массивы для формирования ПУТЕЙ
-            let x1 = [];
-            let y1 = [];
-            let namesPro = [];
-
-            // Выделим эти Навыки
-            nearestSlaveGroupsArr.forEach(i => {
-                document.querySelector(`#${i[1]} circle`).setAttribute("class", "dotSkill_selected");
-                document.querySelector(`#${i[1]} div`).setAttribute("class", "textSkill_selected");
-            
-                x1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cx"));
-                y1.push(+document.querySelector(`#${i[1]} circle`).getAttribute("cy"));
-                namesPro.push(document.querySelector(`#${i[1]} div`).textContent);
-
-            }); 
+            let [namesPro, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
 
             // 2 
             let arr_Ang = [];
@@ -276,7 +245,6 @@ window.addEventListener('load', () => {
                             arrPathClass.push('pathOther');
                         }
                     }
-                    
                 }
             });
 
@@ -594,14 +562,11 @@ function replaceContentParams(i, arr1, arr2) {
 function moveContent(dot, selector) {
     let textOfSlaveDotsArr = (selector == ".textPro") ? getArrOfProDots(dot) : getArrOfSkillDots(dot);
     let slaveGroups = getObjOfContentToGroupId(textOfSlaveDotsArr, selector);
-
     let slaveGroupsNearest = nearestSlaveDots(dot, textOfSlaveDotsArr.length);
-    let nearestSlaveGroupsArr = Object.entries(slaveGroupsNearest);
-
     let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(slaveGroups, slaveGroupsNearest);
+
     let slaveGroupsNearestArr = Object.entries(slaveGroupsNearestFiltered);
     let slaveGroupsArr = Object.entries(slaveGroupsFiltered);
-
     if (selector == ".textPro") {
         for(let i = 0; i < slaveGroupsArr.length; i++) {
             replaceContent(i, slaveGroupsNearestArr, slaveGroupsArr);
@@ -612,6 +577,25 @@ function moveContent(dot, selector) {
             replaceContent(i, slaveGroupsNearestArr, slaveGroupsArr);
         }
     }
+    return Object.values(slaveGroupsNearest);
+}
 
-    return nearestSlaveGroupsArr;
+function highlightSlaves(arr) {
+    let x1 = [];
+    let y1 = [];
+    let names = [];
+    arr.forEach(i => {
+        let dot = document.querySelector(`#${i} circle`);
+        let text = document.querySelector(`#${i} div`);
+        let dotClassName = dot.getAttribute("class");
+        let textClassName = text.getAttribute("class");
+
+        dot.setAttribute("class", `${dotClassName}_selected`);
+        text.setAttribute("class", `${textClassName}_selected`);
+
+        x1.push(+dot.getAttribute("cx"));
+        y1.push(+dot.getAttribute("cy"));
+        names.push(text.textContent);
+    });
+    return [names, x1, y1];
 }
