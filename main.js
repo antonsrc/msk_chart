@@ -120,8 +120,8 @@ const elementsForRemoving = [
     ".proRing",
     ".skillRing",
     ".rectPro",
-    ".pathOther",
-    ".path"
+    ".otherSkillPath",
+    ".mainSkillPath"
 ];
 
 const objPathSkill = {};
@@ -154,114 +154,12 @@ window.addEventListener('load', () => {
             dot.setAttribute("class", "dotSkill_selected");
             dotText.setAttribute("class", "textSkill_selected");
             addRing(dotX, dotY, 14, "skillRing");
-
-            let nearestSlaveGroupsArr = moveContent(dot, ".textPro");
-            let [namesPro, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
-
-            // Здесь прокладываем ПУТИ
-            // 1 Имеем Базовый узел dotXdotY и набор точек
-            // Первая точка из набора составляет второй конец Базового отрезка
-
-            // 2 Найдем углы полученные между Базовой линией и всеми другими линиями
-            // которые из массивов x1 y1
-            let arr_Ang = [];
-            for (let i = 0; i < x1.length; i++) {
-                arr_Ang.push(getAlpha(dotX, dotY, x1[0], y1[0], x1[i], y1[i]));
-            }
-
-            // 3 Имея эти углы и Базовую линию, проверим, вернуться ли преждние координаты
-            let arr_Coord = [];
-            for (let i = 0; i < arr_Ang.length; i++) {
-                let [x, y] = getCoordCtrlPoint(dotX, dotY, x1[0], y1[0], arr_Ang[i]);
-                arr_Coord.push([x, y]);
-            }
-
-            // 4 Получим ПРАВИЛЬНЫЙ знак угла (через уравнение прямой проходящ через 2 точки)
-            let arrDegSign = getArrWithDegSign(arr_Coord, dotX, dotY, x1, y1);
-
-            let arrPathClass = [];
-            namesPro.forEach(item => {
-                for (let i = 0; i < DATA.length; i++) {
-                    if (DATA[i].name == item) {
-                        if (DATA[i].mainSkill.includes(dotText.textContent)) {
-                            arrPathClass.push('path');
-                        } else if (DATA[i].otherSkill.includes(dotText.textContent)) {
-                            arrPathClass.push('pathOther');
-                        }
-                    }
-                }
-            });
-
-            // 5 Теперь, зная угол, можно знать в какую сторону отсчитывать угол
-            // большой управляющей точки для кривой Безье
-
-            // Построим кривые
-            for (let i = 0; i < arrDegSign.length; i++) {
-                // Рычаг размером 3/4 от отрезка
-                let BCx = (dotX + x1[i]*3)/4;
-                let BCy = (dotY + y1[i]*3)/4;
-                // Рычажок раземром 1/4 от отрезка
-                let LCx = (dotX + BCx)/2;
-                let LCy = (dotY + BCy)/2;
-
-                let degL = 5;
-                let degB = 5 + 13*i;
-                let [litCx, litCy] = getCoordCtrlPoint(dotX, dotY, LCx, LCy, degL*arrDegSign[i]*(-1));
-                let [bigCx, bigCy] = getCoordCtrlPoint(dotX, dotY, BCx, BCy, degB*arrDegSign[i]);
-
-                addPath(dotX, dotY, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
-            }
+            addAllPaths(dot, dotX, dotY, dotText, ".textPro");
         } else if (dot.matches(".dotPro")) {
             dot.setAttribute("class", "dotPro_selected");
             addRect(getRectCoord(dotText), 7, "rectPro");
             addRing(dotX, dotY, 14, "proRing");
-            
-            let nearestSlaveGroupsArr = moveContent(dot, ".textSkill");
-            let [namesPro, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
-
-            // 2 
-            let arr_Ang = [];
-            for (let i = 0; i < x1.length; i++) {
-                arr_Ang.push(getAlpha(dotX, dotY, x1[0], y1[0], x1[i], y1[i]));
-            }
-
-            // 3 
-            let arr_Coord = [];
-            for (let i = 0; i < arr_Ang.length; i++) {
-                let [x, y] = getCoordCtrlPoint(dotX, dotY, x1[0], y1[0], arr_Ang[i]);
-                arr_Coord.push([x, y]);
-            }
-
-            // 4
-            let arrDegSign = getArrWithDegSign(arr_Coord, dotX, dotY, x1, y1)
-
-            let arrPathClass = [];
-            namesPro.forEach(item => {
-                for (let i = 0; i < DATA.length; i++) {
-                    if (DATA[i].name == dotText.textContent) {
-                        if (DATA[i].mainSkill.includes(item)) {
-                            arrPathClass.push('path');
-                        } else if (DATA[i].otherSkill.includes(item)) {
-                            arrPathClass.push('pathOther');
-                        }
-                    }
-                }
-            });
-
-            // 5 
-            for (let i = 0; i < arrDegSign.length; i++) {
-                let BCx = (dotX + x1[i]*3)/4;
-                let BCy = (dotY + y1[i]*3)/4;
-                let LCx = (dotX + BCx)/2;
-                let LCy = (dotY + BCy)/2;
-
-                let degL = 2;
-                let degB = 5 + 2*i;
-                let [litCx, litCy] = getCoordCtrlPoint(dotX, dotY, LCx, LCy, degL*arrDegSign[i]*(-1));
-                let [bigCx, bigCy] = getCoordCtrlPoint(dotX, dotY, BCx, BCy, degB*arrDegSign[i]);
-
-                addPath(dotX, dotY, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
-            }
+            addAllPaths(dot, dotX, dotY, dotText, ".textSkill");
         }
     });
 });
@@ -331,13 +229,13 @@ function getCoordCtrlPoint(x0, y0, x1, y1, deg) {
     return [x_new, y_new];
 }
 
-function getAlpha(x0, y0, x1, y1, x1_new, y1_new) {
+function getDeg(x0, y0, x1, y1, x1_new, y1_new) {
     let a1 = x1 - x0;
     let a2 = y1 - y0;
     let b1 = x1_new - x0;
     let b2 = y1_new - y0;
     let cosA = (a1*b1 + a2*b2)/(Math.sqrt(a1**2 + a2**2)*Math.sqrt(b1**2 + b2**2));
-    return Math.acos(cosA)*180/Math.PI;
+    return isNaN(Math.acos(cosA)*180/Math.PI) ? 0 : Math.acos(cosA)*180/Math.PI;
 }
 
 function addText(x, y, class_name, content, g) {
@@ -430,22 +328,15 @@ function nearestSlaveDots(selectedDot, amount) {
     return slaveGroupsNearest;
 }
 
-function getArrWithDegSign(arr_Coord, x0, y0, x1, y1) {
+function getArrWithDegSign(arrCoord, x0, y0, x1, y1) {
     let arrDegSign = [];
-    for (let i = 0; i < arr_Coord.length; i++) {
+    for (let i = 0; i < arrCoord.length; i++) {
         let a1 = x1[i] - x0;
-        let b1 = arr_Coord[i][0] - x0;
+        let b1 = arrCoord[i][0] - x0;
         let a2 = y1[i] - y0;
-        let b2 = arr_Coord[i][1] - y0;
-
-        if (b1 == 0) b1 = 0.01;
-        if (b2 == 0) b2 = 0.01;
-        if (a1 == 0) a1 = 0.01;
-        if (a2 == 0) a2 = 0.01;
-
+        let b2 = arrCoord[i][1] - y0;
         let ab1 = (a1/b1).toFixed(2);
         let ab2 = (a2/b2).toFixed(2);
-
         if (ab1 == ab2) {
             arrDegSign.push(1);
         } else {
@@ -598,4 +489,81 @@ function highlightSlaves(arr) {
         names.push(text.textContent);
     });
     return [names, x1, y1];
+}
+
+function getPathParams(dotX, dotY, x1, y1, namesSlaves, dotText) {
+    // Найдем углы полученные между Базовой линией (dotX, dotY, x1[0], y1[0]) 
+    // и всеми другими линиями которые из массивов x1 y1
+    let arrDeg = [];
+    for (let i = 0; i < x1.length; i++) {
+        arrDeg.push(getDeg(dotX, dotY, x1[0], y1[0], x1[i], y1[i]));
+    }
+
+    // Имея углы arrDeg и Базовую линию получим координаты точек
+    // которые должны лежать на прямых под углами arrDeg
+    let arrCoord = [];
+    for (let i = 0; i < arrDeg.length; i++) {
+        let [x, y] = getCoordCtrlPoint(dotX, dotY, x1[0], y1[0], arrDeg[i]);
+        arrCoord.push([x, y]);
+    }
+
+    // Через уравнение прямой проходящ через 2 точки 
+    // проверим лежат ли координаты точек arrCoord на прямых
+    let arrDegSign = getArrWithDegSign(arrCoord, dotX, dotY, x1, y1);
+
+    // Опрделеим класс (цвет) кривой
+    let arrPathClass = [];
+    namesSlaves.forEach(item => {
+        let comparedVar;
+        let inclVar;
+        if (dotText.getAttribute("class") == "textSkill_selected") {
+            comparedVar = item;
+            inclVar = dotText.textContent;
+        } else if (dotText.getAttribute("class") == "textPro") {
+            comparedVar = dotText.textContent;
+            inclVar = item;
+        }
+
+        for (let i = 0; i < DATA.length; i++) {
+            if (DATA[i].name == comparedVar) {
+                if (DATA[i]['mainSkill'].includes(inclVar)) {
+                    arrPathClass.push('mainSkillPath');
+                } else if (DATA[i]['otherSkill'].includes(inclVar)) {
+                    arrPathClass.push('otherSkillPath');
+                }
+                break;
+            }
+        }
+    });
+    return [arrDegSign, arrPathClass];
+}
+
+function addAllPaths(dot, dotX, dotY, dotText, selector) {
+    let nearestSlaveGroupsArr = moveContent(dot, selector);
+    let [namesSlaves, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
+
+    let [arrDegSign, arrPathClass] = getPathParams(dotX, dotY, x1, y1, namesSlaves, dotText);
+
+    for (let i = 0; i < arrDegSign.length; i++) {
+        // Рычажок длинной 3/4 от отрезка
+        let BCx = (dotX + x1[i]*3)/4;
+        let BCy = (dotY + y1[i]*3)/4;
+        // Рычажок длинной 1/4 от отрезка
+        let LCx = (dotX + BCx)/2;
+        let LCy = (dotY + BCy)/2;
+
+        let degL;
+        let degB;
+        if (selector == ".textPro") {
+            degL = 5;
+            degB = 5 + 13*i;
+        } else if (selector == ".textSkill") {
+            degL = 2;
+            degB = 5 + 2*i;
+        }
+
+        let [litCx, litCy] = getCoordCtrlPoint(dotX, dotY, LCx, LCy, degL*arrDegSign[i]*(-1));
+        let [bigCx, bigCy] = getCoordCtrlPoint(dotX, dotY, BCx, BCy, degB*arrDegSign[i]);
+        addPath(dotX, dotY, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
+    }
 }

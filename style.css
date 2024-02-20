@@ -52,20 +52,20 @@ svg div{
     animation-fill-mode: forwards;
 }
 
-.path,
-.pathOther {
+.mainSkillPath,
+.otherSkillPath {
     stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
     fill: transparent;
     stroke-width: 2.5;
 }
 
-.path {
+.mainSkillPath {
     stroke: #FF7A00;
     animation: dash 1.5s linear forwards;
 }
 
-.pathOther {
+.otherSkillPath {
     stroke: #8F59B9;
     animation: dash 1.5s linear forwards;
 }
