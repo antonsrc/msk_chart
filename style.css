@@ -87,19 +87,19 @@ svg div{
     justify-content: center;
 }
 
-.proRing,
-.skillRing {
+.ringPro,
+.ringSkill {
     fill: #FFFFFF;
     cursor: pointer;
 }
 
-.skillRing {
+.ringSkill {
     stroke: #FF7A00;
     animation: change_r_Skill 0.1s;
     animation-fill-mode: forwards;
 }
 
-.proRing {
+.ringPro {
     stroke: #00A372;
     animation: change_r_pro 0.1s;
     animation-fill-mode: forwards;

@@ -1,6 +1,6 @@
 "use strict"
 
-const DATA = [
+const INPUT_DATA = [
     {
         name: "Финансовый аналитик",
         mainSkill: ["Excel", "SQL", "VBA", "1C"],
@@ -95,8 +95,8 @@ const DATA = [
     },
 ];
 
-const arrSkill = getAllSkill(DATA);
-const arrPro = getAllPro(DATA);
+const arrSkill = getAllSkill(INPUT_DATA);
+const arrPro = getAllPro(INPUT_DATA);
 
 const mainSVG = document.getElementById('mainSVG');
 const skillCircle = document.getElementById("skillCircle");
@@ -117,8 +117,8 @@ const proDotParams = {
 };
 
 const elementsForRemoving = [
-    ".proRing",
-    ".skillRing",
+    ".ringPro",
+    ".ringSkill",
     ".rectPro",
     ".otherSkillPath",
     ".mainSkillPath"
@@ -140,27 +140,18 @@ for (let i = -90, j = 0; i < 270; i += degStepPro, j++) {
 window.addEventListener('load', () => {
     mainSVG.addEventListener('click', e => {
         let dot = e.target;
-        let dotText = document.querySelector(`#${dot.parentNode.id} div`);
-        let dotX = +dot.getAttribute("cx");
-        let dotY = +dot.getAttribute("cy");
+        if(!isDot(dot)) return;
+        let [, , , , , , dotName] = getDotParams(dot);
+
         if(checkGroupOfDot(dot)) {
             removePreviousEvents(elementsForRemoving);
             unselectAll();
-        } else {
-            return;
-        }
-
-        if (dot.matches(".dotSkill")) {
-            dot.setAttribute("class", "dotSkill_selected");
-            dotText.setAttribute("class", "textSkill_selected");
-            addRing(dotX, dotY, 14, "skillRing");
-            addAllPaths(dot, dotX, dotY, dotText, ".textPro");
-        } else if (dot.matches(".dotPro")) {
-            dot.setAttribute("class", "dotPro_selected");
-            addRect(getRectCoord(dotText), 7, "rectPro");
-            addRing(dotX, dotY, 14, "proRing");
-            addAllPaths(dot, dotX, dotY, dotText, ".textSkill");
-        }
+        } else return;
+        
+        dot.setAttribute("class", `dot${dotName}_selected`);
+        changeTextArea(dot);
+        addRing(dot, 14);
+        addAllPaths(dot);
     });
 });
 
@@ -172,12 +163,13 @@ function addDot(dotName, dotParams, dotSize, textData, i, deg, rShift) {
     addText(xText, yText, `text${dotName}`, textData[i], g);
 }
 
-function addRing(x, y, r, class_name) {
+function addRing(dot, r) {
     let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    let [ , x, y, , , , dotName] = getDotParams(dot);
     element.setAttribute("cx", x);
     element.setAttribute("cy", y);
     element.setAttribute("r", r);
-    element.setAttribute("class", class_name);
+    element.setAttribute("class", `ring${dotName}`);
     proCircle.after(element);
 }
 
@@ -281,13 +273,13 @@ function deg2rad(deg) {
 
 function getAllPro(data) {
     let arr = [];
-    DATA.forEach(item => arr.push(item.name));
+    data.forEach(item => arr.push(item.name));
     return arr;
 }
 
 function getAllSkill(data) {
     let allSkill = new Set();
-    DATA.forEach(item => {
+    data.forEach(item => {
         let ms = new Set(item.mainSkill);
         let os = new Set(item.otherSkill);
         allSkill = new Set([...allSkill, ...ms, ...os]);
@@ -366,7 +358,7 @@ function checkGroupOfDot(dot) {
 function getArrOfProDots(dot) {
     let arr = [];
     let text = document.querySelector(`#${dot.parentNode.id} div`).textContent;
-    DATA.forEach(item => {
+    INPUT_DATA.forEach(item => {
         if (item['mainSkill'].includes(text)) {
             arr.push(item.name);
         }
@@ -392,7 +384,7 @@ function getRectCoord(text) {
 function getArrOfSkillDots(dot) {
     let arr = [];
     let text = document.querySelector(`#${dot.parentNode.id} div`).textContent;
-    let pro = DATA.filter(obj => obj.name == text)[0];
+    let pro = INPUT_DATA.filter(obj => obj.name == text)[0];
     if (pro.hasOwnProperty('otherSkill')) {
         arr = pro['mainSkill'].concat(pro['otherSkill']);
     }
@@ -491,7 +483,8 @@ function highlightSlaves(arr) {
     return [names, x1, y1];
 }
 
-function getPathParams(dotX, dotY, x1, y1, namesSlaves, dotText) {
+function getPathParams(dot, x1, y1, namesSlaves) {
+    let [dotText, dotX, dotY] = getDotParams(dot);
     // Найдем углы полученные между Базовой линией (dotX, dotY, x1[0], y1[0]) 
     // и всеми другими линиями которые из массивов x1 y1
     let arrDeg = [];
@@ -524,11 +517,11 @@ function getPathParams(dotX, dotY, x1, y1, namesSlaves, dotText) {
             inclVar = item;
         }
 
-        for (let i = 0; i < DATA.length; i++) {
-            if (DATA[i].name == comparedVar) {
-                if (DATA[i]['mainSkill'].includes(inclVar)) {
+        for (let i = 0; i < INPUT_DATA.length; i++) {
+            if (INPUT_DATA[i].name == comparedVar) {
+                if (INPUT_DATA[i]['mainSkill'].includes(inclVar)) {
                     arrPathClass.push('mainSkillPath');
-                } else if (DATA[i]['otherSkill'].includes(inclVar)) {
+                } else if (INPUT_DATA[i]['otherSkill'].includes(inclVar)) {
                     arrPathClass.push('otherSkillPath');
                 }
                 break;
@@ -538,11 +531,14 @@ function getPathParams(dotX, dotY, x1, y1, namesSlaves, dotText) {
     return [arrDegSign, arrPathClass];
 }
 
-function addAllPaths(dot, dotX, dotY, dotText, selector) {
-    let nearestSlaveGroupsArr = moveContent(dot, selector);
+function addAllPaths(dot) {
+    let [ , dotX, dotY, , , , dotName] = getDotParams(dot);
+    let slaveSelector = (dotName === "Skill") ? ".textPro" : ".textSkill";
+
+    let nearestSlaveGroupsArr = moveContent(dot, slaveSelector);
     let [namesSlaves, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
 
-    let [arrDegSign, arrPathClass] = getPathParams(dotX, dotY, x1, y1, namesSlaves, dotText);
+    let [arrDegSign, arrPathClass] = getPathParams(dot, x1, y1, namesSlaves);
 
     for (let i = 0; i < arrDegSign.length; i++) {
         // Рычажок длинной 3/4 от отрезка
@@ -554,10 +550,10 @@ function addAllPaths(dot, dotX, dotY, dotText, selector) {
 
         let degL;
         let degB;
-        if (selector == ".textPro") {
+        if (slaveSelector == ".textPro") {
             degL = 5;
             degB = 5 + 13*i;
-        } else if (selector == ".textSkill") {
+        } else if (slaveSelector == ".textSkill") {
             degL = 2;
             degB = 5 + 2*i;
         }
@@ -565,5 +561,33 @@ function addAllPaths(dot, dotX, dotY, dotText, selector) {
         let [litCx, litCy] = getCoordCtrlPoint(dotX, dotY, LCx, LCy, degL*arrDegSign[i]*(-1));
         let [bigCx, bigCy] = getCoordCtrlPoint(dotX, dotY, BCx, BCy, degB*arrDegSign[i]);
         addPath(dotX, dotY, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
+    }
+}
+
+function getDotParams(dot) {
+    let text = document.querySelector(`#${dot.parentNode.id} div`);
+    let x = +dot.getAttribute("cx");
+    let y = +dot.getAttribute("cy");
+    let dotClassName = dot.getAttribute("class");
+    let groupIdName = dot.parentNode.id;
+    let groupClassName = dot.parentNode.getAttribute("class");
+    let simpleGroupName = dot.parentNode.getAttribute("class").slice(1);
+    return [text, x, y, dotClassName, groupIdName, groupClassName, simpleGroupName];
+}
+
+function isDot(dot) {
+    let d = dot.matches(".dotSkill") 
+    || dot.matches(".dotPro") 
+    || dot.matches(".dotSkill_selected") 
+    || dot.matches(".dotPro_selected");
+    return d;
+}
+
+function changeTextArea(dot) {
+    let [dotText, , , , , , text] = getDotParams(dot);
+    if (text == 'Skill') {
+        dotText.setAttribute("class", `text${text}_selected`);
+    } else if (text == 'Pro') {
+        addRect(getRectCoord(dotText), 7, `rect${text}`);
     }
 }
