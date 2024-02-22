@@ -95,47 +95,19 @@ const INPUT_DATA = [
     },
 ];
 
-const arrSkill = getAllSkill(INPUT_DATA);
-const arrPro = getAllPro(INPUT_DATA);
-
+const allSkill = getAllSkill(INPUT_DATA);
+const allPro = getAllPro(INPUT_DATA);
 const mainSVG = document.getElementById('mainSVG');
-const skillCircle = document.getElementById("skillCircle");
-const proCircle = document.getElementById("proCircle");
-
-const degStepSkill = 360/arrSkill.length;
-const skillDotParams = {
-    'cx': +skillCircle.getAttribute("cx"),
-    'cy': +skillCircle.getAttribute("cy"),
-    'r': +skillCircle.getAttribute("r")
-};
-
-const degStepPro = 360/arrPro.length;
-const proDotParams = {
-    'cx': +proCircle.getAttribute("cx"),
-    'cy': +proCircle.getAttribute("cy"),
-    'r': +proCircle.getAttribute("r")
-};
-
 const elementsForRemoving = [
     ".ringPro",
-    ".ringSkill",
     ".rectPro",
+    ".ringSkill",
     ".otherSkillPath",
     ".mainSkillPath"
 ];
 
-const objPathSkill = {};
-const objPathPro = {};
-
-for (let i = -90, j = 0; i < 270; i += degStepSkill, j++) {
-    addDot("Skill", skillDotParams, 14, arrSkill, j, i, 60);
-    objPathSkill['groupSkill_'+j] = getPos(i, skillDotParams);
-}
-
-for (let i = -90, j = 0; i < 270; i += degStepPro, j++) {
-    addDot("Pro", proDotParams, 12, arrPro, j, i, 73);
-    objPathPro['groupPro_'+j] = getPos(i, proDotParams);
-}
+let dotSkillCoord = addDotsAtCircle(allSkill, 'Skill', 14, 60);
+let dotProCoord = addDotsAtCircle(allPro, 'Pro', 12, 73);
 
 window.addEventListener('load', () => {
     mainSVG.addEventListener('click', e => {
@@ -155,12 +127,20 @@ window.addEventListener('load', () => {
     });
 });
 
-function addDot(dotName, dotParams, dotSize, textData, i, deg, rShift) {
-    let [x, y] = getPos(deg, dotParams);
-    let [xText, yText] = getPos(deg, dotParams, rShift);
-    let g = addGroup(`group${dotName}_${i}`, `g${dotName}`);
+function addDot(dotName, dotSize, textData, deg, rShift) {
+    const circle = document.getElementById(`circle${dotName}`);
+    const circleParams = {
+        cx: +circle.getAttribute("cx"),
+        cy: +circle.getAttribute("cy"),
+        r: +circle.getAttribute("r")
+    };
+
+    let [x, y] = getPos(deg, circleParams);
+    let [xText, yText] = getPos(deg, circleParams, rShift);
+    let g = addGroup(`group${dotName}_${deg}`, `g${dotName}`);
     addCircle(x, y, dotSize, `dot${dotName}`, g);
-    addText(xText, yText, `text${dotName}`, textData[i], g);
+    addText(xText, yText, `text${dotName}`, textData, g);
+    return [x, y];
 }
 
 function addRing(dot, r) {
@@ -170,7 +150,7 @@ function addRing(dot, r) {
     element.setAttribute("cy", y);
     element.setAttribute("r", r);
     element.setAttribute("class", `ring${dotName}`);
-    proCircle.after(element);
+    circlePro.after(element);
 }
 
 function addRect(arr, rx, class_name) {
@@ -182,7 +162,7 @@ function addRect(arr, rx, class_name) {
     rect.setAttribute("height", h);
     rect.setAttribute("rx", rx);
     rect.setAttribute("class", class_name);
-    proCircle.after(rect);
+    circlePro.after(rect);
 }
 
 function addGroup(id, class_name) {
@@ -207,7 +187,7 @@ function addPath(x0, y0, xc1, yc1, xc2, yc2, x1, y1, class_name) {
     let d = `M ${x0} ${y0} C ${xc1} ${yc1} ${xc2} ${yc2} ${x1} ${y1}`;
     path.setAttribute("d", d);
     path.setAttribute("class", class_name);
-    proCircle.after(path);
+    circlePro.after(path);
 }
 
 function getCoordCtrlPoint(x0, y0, x1, y1, deg) {
@@ -252,18 +232,16 @@ function addText(x, y, class_name, content, g) {
     text.setAttribute("y", y-offset_y);
 }
 
-function getPos(deg, skillDotParams, rShift) {
-    let rBig = skillDotParams['r'];
-    let xBig = skillDotParams['cx'];
-    let yBig = skillDotParams['cy'];
+function getPos(deg, circleParams, radiusShift) {
+    let {cx, cy, r} = circleParams;
 
-    if (rShift != undefined) {
-        rBig += rShift;
+    if (radiusShift != undefined) {
+        r += radiusShift;
     }
 
     let rad = deg2rad(deg);
-    let x = xBig + rBig*Math.cos(rad);
-    let y = yBig + rBig*Math.sin(rad);
+    let x = cx + r*Math.cos(rad);
+    let y = cy + r*Math.sin(rad);
     return [x, y];
 }
 
@@ -272,9 +250,7 @@ function deg2rad(deg) {
 }
 
 function getAllPro(data) {
-    let arr = [];
-    data.forEach(item => arr.push(item.name));
-    return arr;
+    return data.map(item => item.name);
 }
 
 function getAllSkill(data) {
@@ -296,14 +272,14 @@ function nearestSlaveDots(selectedDot, amount) {
     let yP = +selectedDot.getAttribute("cy");
     let lengthArr = [];
     if (selectedDot.getAttribute("class") == "dotSkill_selected") {
-        for(let group in objPathPro) {
-            let [xS, yS] = objPathPro[group];
+        for(let group in dotProCoord) {
+            let [xS, yS] = dotProCoord[group];
             let len = getLength(xP, yP, xS, yS);
             lengthArr.push([len, group]);
         }
     } else if (selectedDot.getAttribute("class") == "dotPro_selected") {
-        for(let group in objPathSkill) {
-            let [xS, yS] = objPathSkill[group];
+        for(let group in dotSkillCoord) {
+            let [xS, yS] = dotSkillCoord[group];
             let len = getLength(xP, yP, xS, yS);
             lengthArr.push([len, group]);
         }
@@ -494,15 +470,11 @@ function getPathParams(dot, x1, y1, namesSlaves) {
 
     // Имея углы arrDeg и Базовую линию получим координаты точек
     // которые должны лежать на прямых под углами arrDeg
-    let arrCoord = [];
-    for (let i = 0; i < arrDeg.length; i++) {
-        let [x, y] = getCoordCtrlPoint(dotX, dotY, x1[0], y1[0], arrDeg[i]);
-        arrCoord.push([x, y]);
-    }
+    let coords = arrDeg.map((val, i) => getCoordCtrlPoint(dotX, dotY, x1[0], y1[0], arrDeg[i]));
 
     // Через уравнение прямой проходящ через 2 точки 
-    // проверим лежат ли координаты точек arrCoord на прямых
-    let arrDegSign = getArrWithDegSign(arrCoord, dotX, dotY, x1, y1);
+    // проверим лежат ли координаты точек coords на прямых
+    let arrDegSign = getArrWithDegSign(coords, dotX, dotY, x1, y1);
 
     // Опрделеим класс (цвет) кривой
     let arrPathClass = [];
@@ -590,4 +562,19 @@ function changeTextArea(dot) {
     } else if (text == 'Pro') {
         addRect(getRectCoord(dotText), 7, `rect${text}`);
     }
+}
+
+function addDotsAtCircle(inputData, dotName, dotSize, rShift) {
+    let dotCoord = {};
+    let degStepSkill = 360/inputData.length;
+
+    let degrees = [];
+    for (let deg = -90; deg < 270; deg += degStepSkill) {
+        degrees.push(Math.trunc(deg))
+    }
+    
+    inputData.forEach((dot, i) => {
+        dotCoord[`group${dotName}_${degrees[i]}`] = addDot(dotName, dotSize, dot, degrees[i], rShift);
+    });
+    return dotCoord;
 }
