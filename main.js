@@ -97,7 +97,11 @@ const INPUT_DATA = [
 
 const allSkill = getAllSkill(INPUT_DATA);
 const allPro = getAllPro(INPUT_DATA);
+
 const mainSVG = document.getElementById('mainSVG');
+const circlePro = document.getElementById('circlePro');
+const circleSkill = document.getElementById('circleSkill');
+
 const elementsForRemoving = [
     ".ringPro",
     ".rectPro",
@@ -106,50 +110,65 @@ const elementsForRemoving = [
     ".mainSkillPath"
 ];
 
-let dotSkillCoord = addDotsAtCircle(allSkill, 'Skill', 14, 60);
-let dotProCoord = addDotsAtCircle(allPro, 'Pro', 12, 73);
+const dotParams = {
+    Skill: {
+        size: 14,
+        radiusTextShift: 60,
+        slave: 'Pro',
+    },
+    Pro: {
+        size: 12,
+        radiusTextShift: 73,
+        slave: 'Skill',
+    },
+};
+
+addDotsAtCircle(allSkill, 'Skill');
+addDotsAtCircle(allPro, 'Pro');
 
 window.addEventListener('load', () => {
     mainSVG.addEventListener('click', e => {
         let dot = e.target;
         if(!isDot(dot)) return;
-        let [, , , , , , dotName] = getDotParams(dot);
+        let {groupSimpleName} = getDotParams(dot);
 
         if(checkGroupOfDot(dot)) {
             removePreviousEvents(elementsForRemoving);
             unselectAll();
         } else return;
         
-        dot.setAttribute("class", `dot${dotName}_selected`);
+        dot.setAttribute("class", `dot${groupSimpleName}_selected`);
         changeTextArea(dot);
         addRing(dot, 14);
         addAllPaths(dot);
     });
 });
 
-function addDot(dotName, dotSize, textData, deg, rShift) {
+function addDot(dotName, textData, deg) {
     const circle = document.getElementById(`circle${dotName}`);
     const circleParams = {
         cx: +circle.getAttribute("cx"),
         cy: +circle.getAttribute("cy"),
         r: +circle.getAttribute("r")
     };
+    const {size, radiusTextShift} = dotParams[dotName];
+
+    let g = addGroup(`group${dotName}_${deg}`, `g${dotName}`);
 
     let [x, y] = getPos(deg, circleParams);
-    let [xText, yText] = getPos(deg, circleParams, rShift);
-    let g = addGroup(`group${dotName}_${deg}`, `g${dotName}`);
-    addCircle(x, y, dotSize, `dot${dotName}`, g);
+    addCircle(x, y, size, `dot${dotName}`, g);
+
+    let [xText, yText] = getPos(deg, circleParams, radiusTextShift);
     addText(xText, yText, `text${dotName}`, textData, g);
-    return [x, y];
 }
 
 function addRing(dot, r) {
     let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    let [ , x, y, , , , dotName] = getDotParams(dot);
-    element.setAttribute("cx", x);
-    element.setAttribute("cy", y);
+    let {dotX, dotY, groupSimpleName} = getDotParams(dot);
+    element.setAttribute("cx", dotX);
+    element.setAttribute("cy", dotY);
     element.setAttribute("r", r);
-    element.setAttribute("class", `ring${dotName}`);
+    element.setAttribute("class", `ring${groupSimpleName}`);
     circlePro.after(element);
 }
 
@@ -212,8 +231,8 @@ function getDeg(x0, y0, x1, y1, x1_new, y1_new) {
 
 function addText(x, y, class_name, content, g) {
     let text = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
-    let arr_content = content.split(" ");
-    let height = arr_content.length*14;
+    let contents = content.split(" ");
+    let height = contents.length*14;
     
     text.setAttribute("x", x);
     text.setAttribute("y", y);
@@ -232,13 +251,9 @@ function addText(x, y, class_name, content, g) {
     text.setAttribute("y", y-offset_y);
 }
 
-function getPos(deg, circleParams, radiusShift) {
+function getPos(deg, circleParams, radiusTextShift) {
     let {cx, cy, r} = circleParams;
-
-    if (radiusShift != undefined) {
-        r += radiusShift;
-    }
-
+    r = (radiusTextShift !== undefined) ? r += radiusTextShift : r;
     let rad = deg2rad(deg);
     let x = cx + r*Math.cos(rad);
     let y = cy + r*Math.sin(rad);
@@ -267,32 +282,24 @@ function getLength(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2));
 }
 
-function nearestSlaveDots(selectedDot, amount) {
-    let xP = +selectedDot.getAttribute("cx");
-    let yP = +selectedDot.getAttribute("cy");
-    let lengthArr = [];
-    if (selectedDot.getAttribute("class") == "dotSkill_selected") {
-        for(let group in dotProCoord) {
-            let [xS, yS] = dotProCoord[group];
-            let len = getLength(xP, yP, xS, yS);
-            lengthArr.push([len, group]);
-        }
-    } else if (selectedDot.getAttribute("class") == "dotPro_selected") {
-        for(let group in dotSkillCoord) {
-            let [xS, yS] = dotSkillCoord[group];
-            let len = getLength(xP, yP, xS, yS);
-            lengthArr.push([len, group]);
-        }
+function nearestSlaveDots(dot, amount) {
+    let {dotX, dotY, groupSimpleName} = getDotParams(dot);
+    let lengthPaths = [];
+    let dotCoord = getCoords(`.g${dotParams[groupSimpleName].slave}`);
+    for(let group in dotCoord) {
+        let [xS, yS] = dotCoord[group];
+        let len = getLength(dotX, dotY, xS, yS);
+        lengthPaths.push([len, group]);
     }
-    lengthArr.sort((a, b) => a[0] - b[0]);
-    let arrOfGropuNames = lengthArr.map(i => i[1]);
+
+    lengthPaths.sort((a, b) => a[0] - b[0]);
+    let groupNames = lengthPaths.map(i => i[1]);
 
     let slaveGroupsNearest = {};
-    arrOfGropuNames.slice(0, amount).forEach(item => {
+    groupNames.slice(0, amount).forEach(item => {
         let text = document.querySelector(`#${item} div`).textContent;
         slaveGroupsNearest[text] = item;
     });
-
     return slaveGroupsNearest;
 }
 
@@ -460,7 +467,8 @@ function highlightSlaves(arr) {
 }
 
 function getPathParams(dot, x1, y1, namesSlaves) {
-    let [dotText, dotX, dotY] = getDotParams(dot);
+    let {textElem, dotX, dotY} = getDotParams(dot);
+
     // Найдем углы полученные между Базовой линией (dotX, dotY, x1[0], y1[0]) 
     // и всеми другими линиями которые из массивов x1 y1
     let arrDeg = [];
@@ -481,11 +489,11 @@ function getPathParams(dot, x1, y1, namesSlaves) {
     namesSlaves.forEach(item => {
         let comparedVar;
         let inclVar;
-        if (dotText.getAttribute("class") == "textSkill_selected") {
+        if (textElem.getAttribute("class") == "textSkill_selected") {
             comparedVar = item;
-            inclVar = dotText.textContent;
-        } else if (dotText.getAttribute("class") == "textPro") {
-            comparedVar = dotText.textContent;
+            inclVar = textElem.textContent;
+        } else if (textElem.getAttribute("class") == "textPro") {
+            comparedVar = textElem.textContent;
             inclVar = item;
         }
 
@@ -504,8 +512,8 @@ function getPathParams(dot, x1, y1, namesSlaves) {
 }
 
 function addAllPaths(dot) {
-    let [ , dotX, dotY, , , , dotName] = getDotParams(dot);
-    let slaveSelector = (dotName === "Skill") ? ".textPro" : ".textSkill";
+    let {dotX, dotY, groupSimpleName} = getDotParams(dot);
+    let slaveSelector = (groupSimpleName === "Skill") ? ".textPro" : ".textSkill";
 
     let nearestSlaveGroupsArr = moveContent(dot, slaveSelector);
     let [namesSlaves, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
@@ -537,14 +545,29 @@ function addAllPaths(dot) {
 }
 
 function getDotParams(dot) {
-    let text = document.querySelector(`#${dot.parentNode.id} div`);
-    let x = +dot.getAttribute("cx");
-    let y = +dot.getAttribute("cy");
+    let dotX = +dot.getAttribute("cx");
+    let dotY = +dot.getAttribute("cy");
     let dotClassName = dot.getAttribute("class");
-    let groupIdName = dot.parentNode.id;
-    let groupClassName = dot.parentNode.getAttribute("class");
-    let simpleGroupName = dot.parentNode.getAttribute("class").slice(1);
-    return [text, x, y, dotClassName, groupIdName, groupClassName, simpleGroupName];
+    
+    let textElem = document.querySelector(`#${dot.parentNode.id} div`);
+    let text = textElem.textContent;
+
+    let groupElem = dot.parentNode;
+    let groupIdName = groupElem.id;
+    let groupClassName = groupElem.getAttribute("class");
+    let groupSimpleName = groupClassName.slice(1);
+
+    return {
+        dotX, 
+        dotY,
+        dotClassName,
+        textElem,
+        text,
+        groupElem,
+        groupIdName,
+        groupClassName,
+        groupSimpleName
+    };
 }
 
 function isDot(dot) {
@@ -556,25 +579,34 @@ function isDot(dot) {
 }
 
 function changeTextArea(dot) {
-    let [dotText, , , , , , text] = getDotParams(dot);
-    if (text == 'Skill') {
-        dotText.setAttribute("class", `text${text}_selected`);
-    } else if (text == 'Pro') {
-        addRect(getRectCoord(dotText), 7, `rect${text}`);
+    let {textElem, groupSimpleName} = getDotParams(dot);
+    if (groupSimpleName == 'Skill') {
+        textElem.setAttribute("class", `text${groupSimpleName}_selected`);
+    } else if (groupSimpleName == 'Pro') {
+        addRect(getRectCoord(textElem), 7, `rect${groupSimpleName}`);
     }
 }
 
-function addDotsAtCircle(inputData, dotName, dotSize, rShift) {
-    let dotCoord = {};
-    let degStepSkill = 360/inputData.length;
+function addDotsAtCircle(inputData, dotName) {
+    let degStep = 360/inputData.length;
+    let degrees = degreesWithStep(degStep);
+    inputData.forEach((text, i) => addDot(dotName, text, degrees[i]));
+}
 
+function getCoords(groupName) {
+    let coords = {};
+    document.querySelectorAll(groupName).forEach(item => {
+        let dot = document.querySelector(`#${item.id} circle`);
+        let {dotX, dotY, groupIdName} = getDotParams(dot);
+        coords[groupIdName] = [dotX, dotY];
+    });
+    return coords;
+}
+
+function degreesWithStep(step) {
     let degrees = [];
-    for (let deg = -90; deg < 270; deg += degStepSkill) {
+    for (let deg = -90; deg < 270; deg += step) {
         degrees.push(Math.trunc(deg))
     }
-    
-    inputData.forEach((dot, i) => {
-        dotCoord[`group${dotName}_${degrees[i]}`] = addDot(dotName, dotSize, dot, degrees[i], rShift);
-    });
-    return dotCoord;
+    return degrees
 }
