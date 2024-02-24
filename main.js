@@ -139,7 +139,7 @@ window.addEventListener('load', () => {
         
         dot.setAttribute("class", `dot${dotType}_selected`);
         changeTextArea(dot);
-        addRing(dot);
+        addRing(dot, 17);
         addAllPaths(dot);
     });
 });
@@ -162,12 +162,12 @@ function addDot(dotName, textData, deg) {
     addText(xText, yText, `text${dotName}`, textData, g);
 }
 
-function addRing(dot) {
+function addRing(dot, r) {
     let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     let {dotX, dotY, dotType} = getDotParams(dot);
     element.setAttribute("cx", dotX);
     element.setAttribute("cy", dotY);
-    // element.setAttribute("r", r);
+    element.setAttribute("r", r);
     element.setAttribute("class", `ring${dotType}`);
     circlePro.after(element);
 }
