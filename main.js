@@ -130,16 +130,16 @@ window.addEventListener('load', () => {
     mainSVG.addEventListener('click', e => {
         let dot = e.target;
         if(!isDot(dot)) return;
-        let {groupSimpleName} = getDotParams(dot);
+        let {dotType} = getDotParams(dot);
 
         if(checkGroupOfDot(dot)) {
             removePreviousEvents(elementsForRemoving);
             unselectAll();
         } else return;
         
-        dot.setAttribute("class", `dot${groupSimpleName}_selected`);
+        dot.setAttribute("class", `dot${dotType}_selected`);
         changeTextArea(dot);
-        addRing(dot, 14);
+        addRing(dot);
         addAllPaths(dot);
     });
 });
@@ -162,13 +162,13 @@ function addDot(dotName, textData, deg) {
     addText(xText, yText, `text${dotName}`, textData, g);
 }
 
-function addRing(dot, r) {
+function addRing(dot) {
     let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    let {dotX, dotY, groupSimpleName} = getDotParams(dot);
+    let {dotX, dotY, dotType} = getDotParams(dot);
     element.setAttribute("cx", dotX);
     element.setAttribute("cy", dotY);
-    element.setAttribute("r", r);
-    element.setAttribute("class", `ring${groupSimpleName}`);
+    // element.setAttribute("r", r);
+    element.setAttribute("class", `ring${dotType}`);
     circlePro.after(element);
 }
 
@@ -283,9 +283,9 @@ function getLength(x1, y1, x2, y2) {
 }
 
 function nearestSlaveDots(dot, amount) {
-    let {dotX, dotY, groupSimpleName} = getDotParams(dot);
+    let {dotX, dotY, dotType} = getDotParams(dot);
     let lengthPaths = [];
-    let dotCoord = getCoords(`.g${dotParams[groupSimpleName].slave}`);
+    let dotCoord = getCoords(`.g${dotParams[dotType].slave}`);
     for(let group in dotCoord) {
         let [xS, yS] = dotCoord[group];
         let len = getLength(dotX, dotY, xS, yS);
@@ -338,7 +338,7 @@ function checkGroupOfDot(dot) {
     return (dotGroupClass == "gPro" || dotGroupClass == "gSkill") ? true : false;
 }
 
-function getArrOfProDots(dot) {
+function getSlaveProDots(dot) {
     let arr = [];
     let text = document.querySelector(`#${dot.parentNode.id} div`).textContent;
     INPUT_DATA.forEach(item => {
@@ -364,7 +364,7 @@ function getRectCoord(text) {
     return [xRect, yRect, width, height];
 }
 
-function getArrOfSkillDots(dot) {
+function getSlaveSkillDots(dot) {
     let arr = [];
     let text = document.querySelector(`#${dot.parentNode.id} div`).textContent;
     let pro = INPUT_DATA.filter(obj => obj.name == text)[0];
@@ -389,7 +389,7 @@ function removeDuplicateKeys(obj1, obj2) {
 function getObjOfContentToGroupId(arr, selector) {
     let slaveGroups = {};
     arr.forEach(item => {
-        document.querySelectorAll(selector).forEach(i => {
+        document.querySelectorAll(`.text${selector}`).forEach(i => {
             if(i.textContent == item) {
                 let group = i.closest("g");
                 slaveGroups[i.textContent] = group.id;
@@ -425,22 +425,19 @@ function replaceContentParams(i, arr1, arr2) {
     foreignElem.setAttribute("height", tempH);
 }
 
-function moveContent(dot, selector) {
-    let textOfSlaveDotsArr = (selector == ".textPro") ? getArrOfProDots(dot) : getArrOfSkillDots(dot);
-    let slaveGroups = getObjOfContentToGroupId(textOfSlaveDotsArr, selector);
-    let slaveGroupsNearest = nearestSlaveDots(dot, textOfSlaveDotsArr.length);
+function moveContent(dot, slaveDotType) {
+    let textOfSlaveDots = (slaveDotType == "Pro") ? getSlaveProDots(dot) : getSlaveSkillDots(dot);
+    let slaveGroups = getObjOfContentToGroupId(textOfSlaveDots, slaveDotType);
+    let slaveGroupsNearest = nearestSlaveDots(dot, textOfSlaveDots.length);
     let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(slaveGroups, slaveGroupsNearest);
 
     let slaveGroupsNearestArr = Object.entries(slaveGroupsNearestFiltered);
     let slaveGroupsArr = Object.entries(slaveGroupsFiltered);
-    if (selector == ".textPro") {
-        for(let i = 0; i < slaveGroupsArr.length; i++) {
-            replaceContent(i, slaveGroupsNearestArr, slaveGroupsArr);
+
+    for(let i = 0; i < slaveGroupsArr.length; i++) {
+        replaceContent(i, slaveGroupsNearestArr, slaveGroupsArr);
+        if (slaveDotType == "Pro") {
             replaceContentParams(i, slaveGroupsNearestArr, slaveGroupsArr);
-        }
-    } else if (selector == ".textSkill") {
-        for(let i = 0; i < slaveGroupsArr.length; i++) {
-            replaceContent(i, slaveGroupsNearestArr, slaveGroupsArr);
         }
     }
     return Object.values(slaveGroupsNearest);
@@ -512,10 +509,10 @@ function getPathParams(dot, x1, y1, namesSlaves) {
 }
 
 function addAllPaths(dot) {
-    let {dotX, dotY, groupSimpleName} = getDotParams(dot);
-    let slaveSelector = (groupSimpleName === "Skill") ? ".textPro" : ".textSkill";
+    let {dotX, dotY, dotType} = getDotParams(dot);
+    let slaveDotType = dotParams[dotType].slave;
 
-    let nearestSlaveGroupsArr = moveContent(dot, slaveSelector);
+    let nearestSlaveGroupsArr = moveContent(dot, slaveDotType);
     let [namesSlaves, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
 
     let [arrDegSign, arrPathClass] = getPathParams(dot, x1, y1, namesSlaves);
@@ -530,10 +527,10 @@ function addAllPaths(dot) {
 
         let degL;
         let degB;
-        if (slaveSelector == ".textPro") {
+        if (slaveDotType == "Pro") {
             degL = 5;
             degB = 5 + 13*i;
-        } else if (slaveSelector == ".textSkill") {
+        } else if (slaveDotType == "Skill") {
             degL = 2;
             degB = 5 + 2*i;
         }
@@ -555,7 +552,7 @@ function getDotParams(dot) {
     let groupElem = dot.parentNode;
     let groupIdName = groupElem.id;
     let groupClassName = groupElem.getAttribute("class");
-    let groupSimpleName = groupClassName.slice(1);
+    let dotType = groupClassName.slice(1);
 
     return {
         dotX, 
@@ -566,7 +563,7 @@ function getDotParams(dot) {
         groupElem,
         groupIdName,
         groupClassName,
-        groupSimpleName
+        dotType
     };
 }
 
@@ -579,11 +576,11 @@ function isDot(dot) {
 }
 
 function changeTextArea(dot) {
-    let {textElem, groupSimpleName} = getDotParams(dot);
-    if (groupSimpleName == 'Skill') {
-        textElem.setAttribute("class", `text${groupSimpleName}_selected`);
-    } else if (groupSimpleName == 'Pro') {
-        addRect(getRectCoord(textElem), 7, `rect${groupSimpleName}`);
+    let {textElem, dotType} = getDotParams(dot);
+    if (dotType == 'Skill') {
+        textElem.setAttribute("class", `text${dotType}_selected`);
+    } else if (dotType == 'Pro') {
+        addRect(getRectCoord(textElem), 7, `rect${dotType}`);
     }
 }
 

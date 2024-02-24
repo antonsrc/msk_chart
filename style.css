@@ -101,7 +101,7 @@ svg div{
 
 .ringPro {
     stroke: #00A372;
-    animation: change_r_pro 0.1s;
+    animation: change_r_Pro 0.1s;
     animation-fill-mode: forwards;
 }
 
@@ -156,16 +156,16 @@ svg div{
 
 @keyframes change_r_Skill {
     from {
-        r: 1;
+        r: 10;
     }
     to {
         r: 17;
     }
 }
 
-@keyframes change_r_pro {
+@keyframes change_r_Pro {
     from {
-        r: 1;
+        r: 10;
     }
     to {
         r: 16;
