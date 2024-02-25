@@ -130,13 +130,11 @@ window.addEventListener('load', () => {
     mainSVG.addEventListener('click', e => {
         let dot = e.target;
         if(!isDot(dot)) return;
-        let {dotType} = getDotParams(dot);
 
-        if(checkGroupOfDot(dot)) {
-            removePreviousEvents(elementsForRemoving);
-            unselectAll();
-        } else return;
-        
+        removePreviousEvents(elementsForRemoving);
+        unselectAll();
+
+        let {dotType} = getDotParams(dot);
         dot.setAttribute("class", `dot${dotType}_selected`);
         changeTextArea(dot);
         addRing(dot, 17);
@@ -279,7 +277,7 @@ function getAllSkill(data) {
 }
 
 function getLength(x1, y1, x2, y2) {
-    return Math.sqrt(Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2));
+    return Math.sqrt((x2-x1)**2 + (y2-y1)**2);
 }
 
 function nearestSlaveDots(dot, amount) {
@@ -303,22 +301,20 @@ function nearestSlaveDots(dot, amount) {
     return slaveGroupsNearest;
 }
 
-function getArrWithDegSign(arrCoord, x0, y0, x1, y1) {
-    let arrDegSign = [];
-    for (let i = 0; i < arrCoord.length; i++) {
+function getDegSigns(coords, x0, y0, x1, y1) {
+    return coords.map((coord, i) => {
         let a1 = x1[i] - x0;
-        let b1 = arrCoord[i][0] - x0;
+        let b1 = coord[0] - x0;
         let a2 = y1[i] - y0;
-        let b2 = arrCoord[i][1] - y0;
+        let b2 = coord[1] - y0;
         let ab1 = (a1/b1).toFixed(2);
         let ab2 = (a2/b2).toFixed(2);
         if (ab1 == ab2) {
-            arrDegSign.push(1);
+            return 1;
         } else {
-            arrDegSign.push(-1);
+            return -1;
         }
-    }
-    return arrDegSign;
+    });
 }
 
 function removePreviousEvents(arr) {
@@ -333,14 +329,9 @@ function unselectAll() {
     });
 }
 
-function checkGroupOfDot(dot) {
-    let dotGroupClass = dot.parentNode.getAttribute("class");
-    return (dotGroupClass == "gPro" || dotGroupClass == "gSkill") ? true : false;
-}
-
 function getSlaveProDots(dot) {
     let arr = [];
-    let text = document.querySelector(`#${dot.parentNode.id} div`).textContent;
+    let {text} = getDotParams(dot);
     INPUT_DATA.forEach(item => {
         if (item['mainSkill'].includes(text)) {
             arr.push(item.name);
@@ -349,6 +340,18 @@ function getSlaveProDots(dot) {
             arr.push(item.name);
         }
     });
+    return arr;
+}
+
+function getSlaveSkillDots(dot) {
+    let arr = [];
+    let {text} = getDotParams(dot);
+    let pro = INPUT_DATA.filter(obj => obj.name == text)[0];
+    if (pro.hasOwnProperty('otherSkill')) {
+        arr = pro['mainSkill'].concat(pro['otherSkill']);
+    } else {
+        arr = pro['mainSkill'];
+    }
     return arr;
 }
 
@@ -362,16 +365,6 @@ function getRectCoord(text) {
     let xRect = +text.parentNode.getAttribute("x") - offset_x;
     let yRect = +text.parentNode.getAttribute("y") - offset_y;
     return [xRect, yRect, width, height];
-}
-
-function getSlaveSkillDots(dot) {
-    let arr = [];
-    let text = document.querySelector(`#${dot.parentNode.id} div`).textContent;
-    let pro = INPUT_DATA.filter(obj => obj.name == text)[0];
-    if (pro.hasOwnProperty('otherSkill')) {
-        arr = pro['mainSkill'].concat(pro['otherSkill']);
-    }
-    return arr;
 }
 
 function removeDuplicateKeys(obj1, obj2) {
@@ -479,7 +472,7 @@ function getPathParams(dot, x1, y1, namesSlaves) {
 
     // Через уравнение прямой проходящ через 2 точки 
     // проверим лежат ли координаты точек coords на прямых
-    let arrDegSign = getArrWithDegSign(coords, dotX, dotY, x1, y1);
+    let arrDegSign = getDegSigns(coords, dotX, dotY, x1, y1);
 
     // Опрделеим класс (цвет) кривой
     let arrPathClass = [];

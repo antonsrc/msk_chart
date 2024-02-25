@@ -67,7 +67,7 @@ svg div{
 
 .otherSkillPath {
     stroke: #8F59B9;
-    animation: dash 1.5s linear forwards;
+    animation: dash2 1.5s linear forwards;
 }
 
 .textSkill {
@@ -113,6 +113,12 @@ svg div{
 }
 
 @keyframes dash {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes dash2 {
     to {
         stroke-dashoffset: 0;
     }
