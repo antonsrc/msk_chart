@@ -442,33 +442,27 @@ function highlightSlaves(arr) {
     let names = [];
     arr.forEach(i => {
         let dot = document.querySelector(`#${i} circle`);
-        let text = document.querySelector(`#${i} div`);
-        let dotClassName = dot.getAttribute("class");
-        let textClassName = text.getAttribute("class");
+        let {text, textElem, textClassName, dotClassName} = getDotParams(dot);
 
         dot.setAttribute("class", `${dotClassName}_selected`);
-        text.setAttribute("class", `${textClassName}_selected`);
+        textElem.setAttribute("class", `${textClassName}_selected`);
 
         x1.push(+dot.getAttribute("cx"));
         y1.push(+dot.getAttribute("cy"));
-        names.push(text.textContent);
+        names.push(text);
     });
     return [names, x1, y1];
 }
 
 function getPathParams(dot, x1, y1, namesSlaves) {
     let {textElem, dotX, dotY} = getDotParams(dot);
-
     // Найдем углы полученные между Базовой линией (dotX, dotY, x1[0], y1[0]) 
     // и всеми другими линиями которые из массивов x1 y1
-    let arrDeg = [];
-    for (let i = 0; i < x1.length; i++) {
-        arrDeg.push(getDeg(dotX, dotY, x1[0], y1[0], x1[i], y1[i]));
-    }
+    let degrees = namesSlaves.map((val, i) => getDeg(dotX, dotY, x1[0], y1[0], x1[i], y1[i]));
 
-    // Имея углы arrDeg и Базовую линию получим координаты точек
-    // которые должны лежать на прямых под углами arrDeg
-    let coords = arrDeg.map((val, i) => getCoordCtrlPoint(dotX, dotY, x1[0], y1[0], arrDeg[i]));
+    // Имея углы degrees и Базовую линию получим координаты точек
+    // которые должны лежать на прямых под углами degrees
+    let coords = degrees.map(deg => getCoordCtrlPoint(dotX, dotY, x1[0], y1[0], deg));
 
     // Через уравнение прямой проходящ через 2 точки 
     // проверим лежат ли координаты точек coords на прямых
@@ -541,6 +535,7 @@ function getDotParams(dot) {
     
     let textElem = document.querySelector(`#${dot.parentNode.id} div`);
     let text = textElem.textContent;
+    let textClassName = textElem.getAttribute("class");
 
     let groupElem = dot.parentNode;
     let groupIdName = groupElem.id;
@@ -553,6 +548,7 @@ function getDotParams(dot) {
         dotClassName,
         textElem,
         text,
+        textClassName,
         groupElem,
         groupIdName,
         groupClassName,
