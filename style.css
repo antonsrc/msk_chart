@@ -10,7 +10,7 @@ svg div{
     user-select: none;
 }
 
-@media screen {
+/* @media screen {
     #circleArea {
         width: 800px;
     }
@@ -20,12 +20,13 @@ svg div{
     #circleArea {
         width: 500px;
     }
-}
+} */
 
 #circleArea {
     display: block;
     margin-left: auto;
     margin-right: auto;
+    width: 800px;
 }
 
 .dotPro {
