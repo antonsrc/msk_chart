@@ -10,18 +10,6 @@ svg div{
     user-select: none;
 }
 
-/* @media screen {
-    #circleArea {
-        width: 800px;
-    }
-}
-
-@media screen and (max-width: 600px) {
-    #circleArea {
-        width: 500px;
-    }
-} */
-
 #circleArea {
     display: block;
     margin-left: auto;
@@ -176,7 +164,7 @@ svg div{
 
 @keyframes change_r_Skill {
     from {
-        r: 10;
+        r: 7;
     }
     to {
         r: 17;
@@ -185,7 +173,7 @@ svg div{
 
 @keyframes change_r_Pro {
     from {
-        r: 10;
+        r: 7;
     }
     to {
         r: 16;

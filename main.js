@@ -99,8 +99,8 @@ const allSkill = getAllSkill(INPUT_DATA);
 const allPro = getAllPro(INPUT_DATA);
 
 const mainSVG = document.getElementById("mainSVG");
-const circlePro = document.getElementById("circlePro");
-const circleSkill = document.getElementById("circleSkill");
+let circlePro;
+let circleSkill;
 
 const elementsForRemoving = [
     ".ringPro",
@@ -110,7 +110,7 @@ const elementsForRemoving = [
     ".mainSkillPath"
 ];
 
-const dotParams = {
+let dotParams = {
     Skill: {
         size: 14,
         radiusTextShift: 60,
@@ -123,10 +123,23 @@ const dotParams = {
     },
 };
 
-addDotsAtCircle(allSkill, "Skill");
-addDotsAtCircle(allPro, "Pro");
-
 window.addEventListener("load", () => {
+    let winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
+    if (winWidth >= 600) {
+        circleSkill = addBigCircle(400, 400, 290, 'circleSkill');
+        circlePro = addBigCircle(400, 400, 125, 'circlePro');
+    } else {
+        circleSkill = addBigCircle(400, 400, 220, 'circleSkill');
+        circlePro = addBigCircle(400, 400, 55, 'circlePro');
+        dotParams.Skill.size = 12;
+        dotParams.Skill.radiusTextShift = 55;
+        dotParams.Pro.size = 10;
+        dotParams.Pro.radiusTextShift = 70;
+    }
+
+    addDotsAtCircle(allSkill, "Skill");
+    addDotsAtCircle(allPro, "Pro");
+
     mainSVG.addEventListener("click", e => {
         let dot = e.target;
         if(!isDot(dot)) return;
@@ -598,4 +611,16 @@ function highlightDot(dot) {
     let {dotType} = getDotParams(dot);
     dot.setAttribute("class", `dot${dotType}_selected`);
     addRing(dot, 17);
+}
+
+function addBigCircle(cx, cy, r, nameId) {
+    let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    element.setAttribute("cx", cx);
+    element.setAttribute("cy", cy);
+    element.setAttribute("r", r);
+    element.setAttribute("stroke", "#ADADAD");
+    element.setAttribute("stroke-width", "3");
+    element.setAttribute("id", nameId);
+    mainSVG.append(element);
+    return element;
 }
