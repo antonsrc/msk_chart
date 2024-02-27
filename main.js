@@ -98,9 +98,9 @@ const INPUT_DATA = [
 const allSkill = getAllSkill(INPUT_DATA);
 const allPro = getAllPro(INPUT_DATA);
 
-const mainSVG = document.getElementById('mainSVG');
-const circlePro = document.getElementById('circlePro');
-const circleSkill = document.getElementById('circleSkill');
+const mainSVG = document.getElementById("mainSVG");
+const circlePro = document.getElementById("circlePro");
+const circleSkill = document.getElementById("circleSkill");
 
 const elementsForRemoving = [
     ".ringPro",
@@ -114,30 +114,27 @@ const dotParams = {
     Skill: {
         size: 14,
         radiusTextShift: 60,
-        slave: 'Pro',
+        slave: "Pro",
     },
     Pro: {
         size: 12,
         radiusTextShift: 73,
-        slave: 'Skill',
+        slave: "Skill",
     },
 };
 
-addDotsAtCircle(allSkill, 'Skill');
-addDotsAtCircle(allPro, 'Pro');
+addDotsAtCircle(allSkill, "Skill");
+addDotsAtCircle(allPro, "Pro");
 
-window.addEventListener('load', () => {
-    mainSVG.addEventListener('click', e => {
+window.addEventListener("load", () => {
+    mainSVG.addEventListener("click", e => {
         let dot = e.target;
         if(!isDot(dot)) return;
 
         removePreviousEvents(elementsForRemoving);
         unselectAll();
-
-        let {dotType} = getDotParams(dot);
-        dot.setAttribute("class", `dot${dotType}_selected`);
+        highlightDot(dot);
         changeTextArea(dot);
-        addRing(dot, 17);
         addAllPaths(dot);
     });
 });
@@ -238,7 +235,7 @@ function addText(x, y, class_name, content, g) {
     text.setAttribute("height", height);
     g.append(text);
     
-    let div = document.createElement('div');
+    let div = document.createElement("div");
     div.setAttribute("class", class_name);
     div.textContent = content;
     text.append(div);
@@ -333,10 +330,10 @@ function getSlaveProDots(dot) {
     let arr = [];
     let {text} = getDotParams(dot);
     INPUT_DATA.forEach(item => {
-        if (item['mainSkill'].includes(text)) {
+        if (item["mainSkill"].includes(text)) {
             arr.push(item.name);
         }
-        if (item.hasOwnProperty('otherSkill') && item['otherSkill'].includes(text)) {
+        if (item.hasOwnProperty("otherSkill") && item["otherSkill"].includes(text)) {
             arr.push(item.name);
         }
     });
@@ -347,10 +344,10 @@ function getSlaveSkillDots(dot) {
     let arr = [];
     let {text} = getDotParams(dot);
     let pro = INPUT_DATA.filter(obj => obj.name == text)[0];
-    if (pro.hasOwnProperty('otherSkill')) {
-        arr = pro['mainSkill'].concat(pro['otherSkill']);
+    if (pro.hasOwnProperty("otherSkill")) {
+        arr = pro["mainSkill"].concat(pro["otherSkill"]);
     } else {
-        arr = pro['mainSkill'];
+        arr = pro["mainSkill"];
     }
     return arr;
 }
@@ -483,10 +480,10 @@ function getPathParams(dot, x1, y1, namesSlaves) {
 
         for (let i = 0; i < INPUT_DATA.length; i++) {
             if (INPUT_DATA[i].name == comparedVar) {
-                if (INPUT_DATA[i]['mainSkill'].includes(inclVar)) {
-                    arrPathClass.push('mainSkillPath');
-                } else if (INPUT_DATA[i]['otherSkill'].includes(inclVar)) {
-                    arrPathClass.push('otherSkillPath');
+                if (INPUT_DATA[i]["mainSkill"].includes(inclVar)) {
+                    arrPathClass.push("mainSkillPath");
+                } else if (INPUT_DATA[i]["otherSkill"].includes(inclVar)) {
+                    arrPathClass.push("otherSkillPath");
                 }
                 break;
             }
@@ -566,9 +563,9 @@ function isDot(dot) {
 
 function changeTextArea(dot) {
     let {textElem, dotType} = getDotParams(dot);
-    if (dotType == 'Skill') {
+    if (dotType == "Skill") {
         textElem.setAttribute("class", `text${dotType}_selected`);
-    } else if (dotType == 'Pro') {
+    } else if (dotType == "Pro") {
         addRect(getRectCoord(textElem), 7, `rect${dotType}`);
     }
 }
@@ -595,4 +592,10 @@ function degreesWithStep(step) {
         degrees.push(Math.trunc(deg))
     }
     return degrees
+}
+
+function highlightDot(dot) {
+    let {dotType} = getDotParams(dot);
+    dot.setAttribute("class", `dot${dotType}_selected`);
+    addRing(dot, 17);
 }
