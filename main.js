@@ -131,6 +131,9 @@ window.addEventListener("load", () => {
     let winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
     let ratio = (winWidth <= 700) ? 0.7 : 1;
     changeGlobalParams(ratio);
+    document.documentElement.style.setProperty(`--r-Pro`, dotParams['Pro'].ringSize);
+    document.documentElement.style.setProperty(`--r-Skill`, dotParams['Skill'].ringSize);
+
 
     circleSkill = addBigCircle(400, 400, 290*ratio, 'circleSkill');
     circlePro = addBigCircle(400, 400, 125*ratio, 'circlePro');
@@ -173,8 +176,7 @@ function addRing(dot, r) {
     let {dotX, dotY, dotType} = getDotParams(dot);
     element.setAttribute("cx", dotX);
     element.setAttribute("cy", dotY);
-    // element.setAttribute("r", r);
-    document.documentElement.style.setProperty(`--r-${dotType}`, dotParams[dotType].ringSize);
+    element.setAttribute("r", r);
     element.setAttribute("class", `ring${dotType}`);
     circlePro.after(element);
 }
