@@ -173,7 +173,7 @@ function addRing(dot, r) {
     let {dotX, dotY, dotType} = getDotParams(dot);
     element.setAttribute("cx", dotX);
     element.setAttribute("cy", dotY);
-    element.setAttribute("r", r);
+    // element.setAttribute("r", r);
     document.documentElement.style.setProperty(`--r-${dotType}`, dotParams[dotType].ringSize);
     element.setAttribute("class", `ring${dotType}`);
     circlePro.after(element);
