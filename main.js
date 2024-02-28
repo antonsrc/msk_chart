@@ -113,29 +113,27 @@ const elementsForRemoving = [
 let dotParams = {
     Skill: {
         size: 14,
+        ringSize: 18,
         radiusTextShift: 60,
         slave: "Pro",
     },
     Pro: {
         size: 12,
+        ringSize: 16,
         radiusTextShift: 73,
         slave: "Skill",
     },
 };
 
+let textWidth = 100;
+
 window.addEventListener("load", () => {
     let winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
-    if (winWidth >= 600) {
-        circleSkill = addBigCircle(400, 400, 290, 'circleSkill');
-        circlePro = addBigCircle(400, 400, 125, 'circlePro');
-    } else {
-        circleSkill = addBigCircle(400, 400, 220, 'circleSkill');
-        circlePro = addBigCircle(400, 400, 55, 'circlePro');
-        dotParams.Skill.size = 12;
-        dotParams.Skill.radiusTextShift = 55;
-        dotParams.Pro.size = 10;
-        dotParams.Pro.radiusTextShift = 70;
-    }
+    let ratio = (winWidth <= 700) ? 0.7 : 1;
+    changeGlobalParams(ratio);
+
+    circleSkill = addBigCircle(400, 400, 290*ratio, 'circleSkill');
+    circlePro = addBigCircle(400, 400, 125*ratio, 'circlePro');
 
     addDotsAtCircle(allSkill, "Skill");
     addDotsAtCircle(allPro, "Pro");
@@ -176,6 +174,7 @@ function addRing(dot, r) {
     element.setAttribute("cx", dotX);
     element.setAttribute("cy", dotY);
     element.setAttribute("r", r);
+    document.documentElement.style.setProperty(`--r-${dotType}`, dotParams[dotType].ringSize);
     element.setAttribute("class", `ring${dotType}`);
     circlePro.after(element);
 }
@@ -244,7 +243,7 @@ function addText(x, y, class_name, content, g) {
     
     text.setAttribute("x", x);
     text.setAttribute("y", y);
-    text.setAttribute("width", 100);
+    text.setAttribute("width", textWidth);
     text.setAttribute("height", height);
     g.append(text);
     
@@ -610,7 +609,7 @@ function degreesWithStep(step) {
 function highlightDot(dot) {
     let {dotType} = getDotParams(dot);
     dot.setAttribute("class", `dot${dotType}_selected`);
-    addRing(dot, 17);
+    addRing(dot, dotParams[dotType].ringSize);
 }
 
 function addBigCircle(cx, cy, r, nameId) {
@@ -623,4 +622,17 @@ function addBigCircle(cx, cy, r, nameId) {
     element.setAttribute("id", nameId);
     mainSVG.append(element);
     return element;
+}
+
+function changeGlobalParams(ratio) {
+    dotParams.Skill.size *= ratio;
+    dotParams.Skill.radiusTextShift *= ratio;
+    dotParams.Skill.ringSize *= ratio;
+
+    dotParams.Pro.size *= ratio;
+    dotParams.Pro.radiusTextShift *= ratio;
+    dotParams.Pro.ringSize *= ratio;
+
+    textWidth *= ratio;
+    document.documentElement.style.setProperty(`--fontSize`, 10.6667*ratio+'px');
 }

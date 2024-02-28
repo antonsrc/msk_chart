@@ -1,6 +1,9 @@
 :root {
     font-size: 1rem;
     font-family: Arial, Helvetica, sans-serif;
+    --r-Pro: 17;
+    --r-Skill: 17;
+    --fontSize: 10.6667px;
 }
 
 svg div{
@@ -42,7 +45,7 @@ svg div{
 .textPro,
 .textPro_selected {
     font-weight: bold;
-    font-size: 10.6667px;
+    font-size: var(--fontSize);
     font-family: Arial;
     text-align: center;
 }
@@ -167,7 +170,7 @@ svg div{
         r: 7;
     }
     to {
-        r: 17;
+        r: var(--r-Skill);
     }
 }
 
@@ -176,6 +179,6 @@ svg div{
         r: 7;
     }
     to {
-        r: 16;
+        r: var(--r-Pro);
     }
 }
