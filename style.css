@@ -1,8 +1,6 @@
 :root {
     font-size: 1rem;
     font-family: Arial, Helvetica, sans-serif;
-    --r-Pro: 17;
-    --r-Skill: 17;
     --fontSize: 10.6667px;
 }
 
@@ -100,14 +98,10 @@ svg div{
 
 .ringSkill {
     stroke: #FF7A00;
-    animation: change_r_Skill 0.1s;
-    animation-fill-mode: forwards;
 }
 
 .ringPro {
     stroke: #00A372;
-    animation: change_r_Pro 0.1s;
-    animation-fill-mode: forwards;
 }
 
 .rectPro {
@@ -162,23 +156,5 @@ svg div{
     }
     to {
         opacity:1;
-    }
-}
-
-@keyframes change_r_Skill {
-    from {
-        r: 7;
-    }
-    to {
-        r: var(--r-Skill);
-    }
-}
-
-@keyframes change_r_Pro {
-    from {
-        r: 7;
-    }
-    to {
-        r: var(--r-Pro);
     }
 }

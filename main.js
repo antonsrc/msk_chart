@@ -131,8 +131,10 @@ window.addEventListener("load", () => {
     let winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
     let ratio = (winWidth <= 700) ? 0.7 : 1;
     changeGlobalParams(ratio);
-    document.documentElement.style.setProperty(`--r-Pro`, dotParams['Pro'].ringSize);
-    document.documentElement.style.setProperty(`--r-Skill`, dotParams['Skill'].ringSize);
+
+    // реализовать анимацию колец через js
+    // document.documentElement.style.setProperty(`--r-Pro`, dotParams['Pro'].ringSize);
+    // document.documentElement.style.setProperty(`--r-Skill`, dotParams['Skill'].ringSize);
 
 
     circleSkill = addBigCircle(400, 400, 290*ratio, 'circleSkill');
@@ -171,12 +173,12 @@ function addDot(dotName, textData, deg) {
     addText(xText, yText, `text${dotName}`, textData, g);
 }
 
-function addRing(dot, r) {
+function addRing(dot) {
     let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     let {dotX, dotY, dotType} = getDotParams(dot);
     element.setAttribute("cx", dotX);
     element.setAttribute("cy", dotY);
-    element.setAttribute("r", r);
+    // element.setAttribute("r", r);
     element.setAttribute("class", `ring${dotType}`);
     circlePro.after(element);
 }
@@ -611,7 +613,13 @@ function degreesWithStep(step) {
 function highlightDot(dot) {
     let {dotType} = getDotParams(dot);
     dot.setAttribute("class", `dot${dotType}_selected`);
-    addRing(dot, dotParams[dotType].ringSize);
+
+    addRing(dot);
+    let ringParams = {
+        elem: document.querySelector(`.ring${dotType}`),
+        maxRadius: dotParams[dotType].ringSize,
+    };
+    animate(radiusScaleUp, 150, ringParams)
 }
 
 function addBigCircle(cx, cy, r, nameId) {
@@ -637,4 +645,22 @@ function changeGlobalParams(ratio) {
 
     textWidth *= ratio;
     document.documentElement.style.setProperty(`--fontSize`, 10.6667*ratio+'px');
+}
+
+function radiusScaleUp(progress, params) {
+    let {elem, maxRadius} = params;
+    elem.setAttribute(`r`, progress*maxRadius);
+}
+
+function animate(draw, duration, params) {
+    let start = performance.now();
+    requestAnimationFrame(function anim(time) {
+        let timeFraction = (time - start) / duration;
+        if (timeFraction < 0) timeFraction = 0;
+        if (timeFraction > 1) timeFraction = 1;
+        draw(timeFraction, params);
+        if (timeFraction < 1) {
+            requestAnimationFrame(anim);
+        }
+      });
 }
