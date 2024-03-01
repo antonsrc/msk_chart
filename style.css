@@ -62,20 +62,17 @@ svg div{
 
 .mainSkillPath,
 .otherSkillPath {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
+    stroke-dasharray: 500;
     fill: transparent;
     stroke-width: 2.5;
 }
 
 .mainSkillPath {
     stroke: #FF7A00;
-    animation: dash 1.5s linear forwards;
 }
 
 .otherSkillPath {
     stroke: #8F59B9;
-    animation: dash2 1.5s linear forwards;
 }
 
 .textSkill {
@@ -109,18 +106,6 @@ svg div{
     opacity: 0.7;
     stroke: #F4F4F4;
     stroke-width: 1.5;
-}
-
-@keyframes dash {
-    to {
-        stroke-dashoffset: 0;
-    }
-}
-
-@keyframes dash2 {
-    to {
-        stroke-dashoffset: 0;
-    }
 }
 
 @keyframes smoother {

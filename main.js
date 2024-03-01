@@ -126,6 +126,7 @@ let dotParams = {
 };
 
 let textWidth = 100;
+const maxPathRange = 500;
 
 window.addEventListener("load", () => {
     let winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
@@ -212,11 +213,12 @@ function addCircle(x, y, r, class_name, group) {
     group.append(element);
 }
 
-function addPath(x0, y0, xc1, yc1, xc2, yc2, x1, y1, class_name) {
+function addPath(x0, y0, xc1, yc1, xc2, yc2, x1, y1, class_name, maxRange) {
     let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     let d = `M ${x0} ${y0} C ${xc1} ${yc1} ${xc2} ${yc2} ${x1} ${y1}`;
     path.setAttribute("d", d);
     path.setAttribute("class", class_name);
+    path.setAttribute("stroke-dashoffset", maxRange);
     circlePro.after(path);
 }
 
@@ -537,8 +539,15 @@ function addAllPaths(dot) {
 
         let [litCx, litCy] = getCoordCtrlPoint(dotX, dotY, LCx, LCy, degL*arrDegSign[i]*(-1));
         let [bigCx, bigCy] = getCoordCtrlPoint(dotX, dotY, BCx, BCy, degB*arrDegSign[i]);
-        addPath(dotX, dotY, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i]);
+        addPath(dotX, dotY, litCx, litCy, bigCx, bigCy, x1[i], y1[i], arrPathClass[i], maxPathRange);
+        animate(extendPath, 1200)
     }
+}
+
+function extendPath(progress) {
+    document.querySelectorAll("[class$='SkillPath']").forEach(item => {
+        item.setAttribute('stroke-dashoffset', maxPathRange - progress * maxPathRange);
+    });
 }
 
 function getDotParams(dot) {
