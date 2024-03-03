@@ -258,7 +258,7 @@ function addText(x, y, class_name, content, g) {
 
     let div = document.createElement("div");
     div.setAttribute("class", class_name);
-    div.style.fontSize = textParams["fontSize"]+"px";
+    div.style.fontSize = textParams["fontSize"] + "px";
     div.textContent = content;
     text.append(div);
 
