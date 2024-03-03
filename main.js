@@ -105,29 +105,42 @@ const elementsForRemoving = [
     ".mainSkillPath"
 ];
 
-let dotParams = {
+let winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
+const ratio = (winWidth <= 700) ? 0.7 : 1;
+
+const dotParams = {
     Skill: {
-        size: 14,
-        ringSize: 18,
-        radiusTextShift: 60,
+        size: 14 * ratio,
+        ringSize: 18 * ratio,
+        radiusTextShift: 60 * ratio,
         slave: "Pro",
     },
     Pro: {
-        size: 12,
-        ringSize: 16,
-        radiusTextShift: 73,
+        size: 12 * ratio,
+        ringSize: 16 * ratio,
+        radiusTextShift: 73 * ratio,
         slave: "Skill",
     },
 };
 
-let textWidth = 100;
+const textParams = {
+    textWidth: 100 * ratio,
+    textHeight: 14 * ratio,
+    fontSize: 10.6667 * ratio,
+};
+
+const pathParams = {
+    strokeWidth: 2.5 * ratio,
+};
+
+const bigCircleParams = {
+    strokeWidth: 3 * ratio,
+};
+
 const maxPathRange = 500;
 
-window.addEventListener("load", () => {
-    let winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
-    let ratio = (winWidth <= 700) ? 0.7 : 1;
-    changeGlobalParams(ratio);
 
+window.addEventListener("load", () => {
     addBigCircle(400, 400, 290 * ratio, 'circleSkill');
     addBigCircle(400, 400, 125 * ratio, 'circlePro');
 
@@ -170,7 +183,7 @@ function addRing(dot) {
     element.setAttribute("cx", dotX);
     element.setAttribute("cy", dotY);
     element.setAttribute("class", `ring${dotType}`);
-    mainSVG.prepend(element);
+    dot.before(element);
 }
 
 function addRect(arr, rx, class_name) {
@@ -207,6 +220,7 @@ function addPath(x0, y0, xc1, yc1, xc2, yc2, x1, y1, class_name, maxRange) {
     let d = `M ${x0} ${y0} C ${xc1} ${yc1} ${xc2} ${yc2} ${x1} ${y1}`;
     path.setAttribute("d", d);
     path.setAttribute("class", class_name);
+    path.setAttribute("stroke-width", pathParams.strokeWidth);
     path.setAttribute("stroke-dashoffset", maxRange);
     mainSVG.prepend(path);
 }
@@ -234,16 +248,17 @@ function getDeg(x0, y0, x1, y1, x1_new, y1_new) {
 function addText(x, y, class_name, content, g) {
     let text = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
     let contents = content.split(" ");
-    let height = contents.length * 14;
+    let height = contents.length * textParams["textHeight"];
 
     text.setAttribute("x", x);
     text.setAttribute("y", y);
-    text.setAttribute("width", textWidth);
+    text.setAttribute("width", textParams["textWidth"]);
     text.setAttribute("height", height);
     g.append(text);
 
     let div = document.createElement("div");
     div.setAttribute("class", class_name);
+    div.style.fontSize = textParams["fontSize"]+"px";
     div.textContent = content;
     text.append(div);
 
@@ -627,23 +642,9 @@ function addBigCircle(cx, cy, r, nameId) {
     element.setAttribute("cy", cy);
     element.setAttribute("r", r);
     element.setAttribute("stroke", "#ADADAD");
-    element.setAttribute("stroke-width", "3");
+    element.setAttribute("stroke-width", bigCircleParams.strokeWidth);
     element.setAttribute("id", nameId);
     mainSVG.append(element);
-    return element;
-}
-
-function changeGlobalParams(ratio) {
-    dotParams.Skill.size *= ratio;
-    dotParams.Skill.radiusTextShift *= ratio;
-    dotParams.Skill.ringSize *= ratio;
-
-    dotParams.Pro.size *= ratio;
-    dotParams.Pro.radiusTextShift *= ratio;
-    dotParams.Pro.ringSize *= ratio;
-
-    textWidth *= ratio;
-    document.documentElement.style.setProperty(`--fontSize`, 10.6667 * ratio + 'px');
 }
 
 function radiusScaleUp(progress, params) {
