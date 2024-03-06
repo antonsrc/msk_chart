@@ -108,19 +108,18 @@ const elementsForRemoving = [
 let winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
 const ratio = (winWidth <= 700) ? 0.7 : 1;
 
-const dotParams = {
-    Skill: {
-        size: 14 * ratio,
-        ringSize: 18 * ratio,
-        radiusTextShift: 60 * ratio,
-        slave: "Pro",
-    },
-    Pro: {
-        size: 12 * ratio,
-        ringSize: 16 * ratio,
-        radiusTextShift: 73 * ratio,
-        slave: "Skill",
-    },
+class DotParams {
+    constructor(size, ringSize, radiusTextShift, slave, ratio) {
+        this.size = size * ratio;
+        this.ringSize = ringSize * ratio;
+        this.radiusTextShift = radiusTextShift * ratio;
+        this.slave = slave;
+    }
+}
+
+let dotParams = {
+    Skill: new DotParams(14, 18, 60, "Pro", ratio),
+    Pro: new DotParams(12, 16, 73, "Skill", ratio),
 };
 
 const textParams = {
@@ -138,7 +137,6 @@ const bigCircleParams = {
 };
 
 const maxPathRange = 500;
-
 
 window.addEventListener("load", () => {
     addBigCircle(400, 400, 290 * ratio, 'circleSkill');
@@ -515,7 +513,6 @@ function getPathParams(dot, x1, y1, namesSlaves) {
 function addAllPaths(dot) {
     let { dotX, dotY, dotType } = getDotParams(dot);
     let slaveDotType = dotParams[dotType].slave;
-
     let nearestSlaveGroupsArr = moveContent(dot, slaveDotType);
     let [namesSlaves, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
 
