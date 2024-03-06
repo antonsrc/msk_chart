@@ -287,11 +287,11 @@ function getAllPro(data) {
 
 function getAllSkill(data) {
     let allSkill = new Set();
-    data.forEach(item => {
+    for (const item of data) {
         let ms = new Set(item.mainSkill);
         let os = new Set(item.otherSkill);
         allSkill = new Set([...allSkill, ...ms, ...os]);
-    });
+    }
     return Array.from(allSkill);
 }
 
@@ -313,10 +313,10 @@ function nearestSlaveDots(dot, amount) {
     let groupNames = lengthPaths.map(i => i[1]);
 
     let slaveGroupsNearest = {};
-    groupNames.slice(0, amount).forEach(item => {
+    for (const item of groupNames.slice(0, amount)) {
         let text = document.querySelector(`#${item} div`).textContent;
         slaveGroupsNearest[text] = item;
-    });
+    }
     return slaveGroupsNearest;
 }
 
@@ -337,28 +337,28 @@ function getDegSigns(coords, x0, y0, x1, y1) {
 }
 
 function removePreviousEvents(arr) {
-    arr.forEach(item => {
+    for (const item of arr) {
         document.querySelectorAll(item).forEach(i => i.remove());
-    });
+    }
 }
 
 function unselectAll() {
-    document.querySelectorAll("[class$='_selected']").forEach(item => {
+    for (const item of document.querySelectorAll("[class$='_selected']")) {
         item.setAttribute("class", item.getAttribute("class").slice(0, -9));
-    });
+    }
 }
 
 function getSlaveProDots(dot) {
     let arr = [];
     let { text } = getDotParams(dot);
-    INPUT_DATA.forEach(item => {
+    for (const item of INPUT_DATA) {
         if (item["mainSkill"].includes(text)) {
             arr.push(item.name);
         }
         if (item.hasOwnProperty("otherSkill") && item["otherSkill"].includes(text)) {
             arr.push(item.name);
         }
-    });
+    }
     return arr;
 }
 
@@ -400,14 +400,12 @@ function removeDuplicateKeys(obj1, obj2) {
 
 function getObjOfContentToGroupId(arr, selector) {
     let slaveGroups = {};
-    arr.forEach(item => {
-        document.querySelectorAll(`.text${selector}`).forEach(i => {
-            if (i.textContent == item) {
-                let group = i.closest("g");
-                slaveGroups[i.textContent] = group.id;
-            }
-        });
-    });
+    for (const i of document.querySelectorAll(`.text${selector}`)) {
+        if (arr.includes(i.textContent)) {
+            let group = i.closest("g");
+            slaveGroups[i.textContent] = group.id;
+        }
+    }
     return slaveGroups;
 }
 
@@ -459,7 +457,7 @@ function highlightSlaves(arr) {
     let x1 = [];
     let y1 = [];
     let names = [];
-    arr.forEach(i => {
+    for (const i of arr) {
         let dot = document.querySelector(`#${i} circle`);
         let { text, textElem, textClassName, dotClassName } = getDotParams(dot);
 
@@ -469,7 +467,7 @@ function highlightSlaves(arr) {
         x1.push(+dot.getAttribute("cx"));
         y1.push(+dot.getAttribute("cy"));
         names.push(text);
-    });
+    }
     return [names, x1, y1];
 }
 
@@ -489,7 +487,7 @@ function getPathParams(dot, x1, y1, namesSlaves) {
 
     // Опрделеим класс (цвет) кривой
     let arrPathClass = [];
-    namesSlaves.forEach(item => {
+    for (const item of namesSlaves) {
         let comparedVar;
         let inclVar;
         if (textElem.getAttribute("class") == "textSkill_selected") {
@@ -500,17 +498,17 @@ function getPathParams(dot, x1, y1, namesSlaves) {
             inclVar = item;
         }
 
-        for (let i = 0; i < INPUT_DATA.length; i++) {
-            if (INPUT_DATA[i].name == comparedVar) {
-                if (INPUT_DATA[i]["mainSkill"].includes(inclVar)) {
+        for (const item of INPUT_DATA) {
+            if (item.name == comparedVar) {
+                if (item["mainSkill"].includes(inclVar)) {
                     arrPathClass.push("mainSkillPath");
-                } else if (INPUT_DATA[i]["otherSkill"].includes(inclVar)) {
+                } else if (item["otherSkill"].includes(inclVar)) {
                     arrPathClass.push("otherSkillPath");
                 }
                 break;
             }
         }
-    });
+    }
     return [arrDegSign, arrPathClass];
 }
 
@@ -549,9 +547,9 @@ function addAllPaths(dot) {
 }
 
 function extendPath(progress) {
-    document.querySelectorAll("[class$='SkillPath']").forEach(item => {
+    for (const item of document.querySelectorAll("[class$='SkillPath']")) {
         item.setAttribute('stroke-dashoffset', maxPathRange - progress * maxPathRange);
-    });
+    }
 }
 
 function getDotParams(dot) {
@@ -608,11 +606,11 @@ function addDotsAtCircle(fn, dotName) {
 
 function getCoords(groupName) {
     let coords = {};
-    document.querySelectorAll(groupName).forEach(item => {
+    for (const item of document.querySelectorAll(groupName)) {
         let dot = document.querySelector(`#${item.id} circle`);
         let { dotX, dotY, groupIdName } = getDotParams(dot);
         coords[groupIdName] = [dotX, dotY];
-    });
+    }
     return coords;
 }
 
