@@ -96,17 +96,9 @@ const INPUT_DATA = [
 ];
 
 const mainSVG = document.getElementById("mainSVG");
-
-const elementsForRemoving = [
-    ".ringPro",
-    ".rectPro",
-    ".ringSkill",
-    ".otherSkillPath",
-    ".mainSkillPath"
-];
-
-let winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
+const winWidth = window.innerWidth || window.clientWidth || window.clientWidth;
 const ratio = (winWidth <= 700) ? 0.7 : 1;
+const maxPathRange = 500;
 
 class DotParams {
     constructor(size, ringSize, radiusTextShift, slave, ratio) {
@@ -117,9 +109,24 @@ class DotParams {
     }
 }
 
-let dotParams = {
+const dotParams = {
     Skill: new DotParams(14, 18, 60, "Pro", ratio),
     Pro: new DotParams(12, 16, 73, "Skill", ratio),
+};
+
+class CircleParams {
+    constructor(cx, cy, r, strokeWidth, id, ratio) {
+        this.cx = cx;
+        this.cy = cy;
+        this.r = r * ratio;
+        this.strokeWidth = strokeWidth * ratio;
+        this.id = id;
+    }
+}
+
+const circleParams = {
+    Skill: new CircleParams(400, 400, 290, 3, "circleSkill", ratio),
+    Pro: new CircleParams(400, 400, 125, 3, "circlePro", ratio),
 };
 
 const textParams = {
@@ -132,24 +139,24 @@ const pathParams = {
     strokeWidth: 2.5 * ratio,
 };
 
-const bigCircleParams = {
-    strokeWidth: 3 * ratio,
-};
-
-const maxPathRange = 500;
+const tempElements = [
+    ".ringPro",
+    ".rectPro",
+    ".ringSkill",
+    ".otherSkillPath",
+    ".mainSkillPath"
+];
 
 window.addEventListener("load", () => {
-    addBigCircle(400, 400, 290 * ratio, 'circleSkill');
-    addBigCircle(400, 400, 125 * ratio, 'circlePro');
-
+    addBigCircle(circleParams["Skill"]);
+    addBigCircle(circleParams["Pro"]);
     addDotsAtCircle(getAllSkill, "Skill");
     addDotsAtCircle(getAllPro, "Pro");
 
     mainSVG.addEventListener("click", e => {
         let dot = e.target;
         if (!isDot(dot)) return;
-
-        removePreviousEvents(elementsForRemoving);
+        removePreviousEvents(tempElements);
         unselectAll();
         highlightDot(dot);
         changeTextArea(dot);
@@ -158,20 +165,13 @@ window.addEventListener("load", () => {
 });
 
 function addDot(dotName, textData, deg) {
-    const circle = document.getElementById(`circle${dotName}`);
-    const circleParams = {
-        cx: +circle.getAttribute("cx"),
-        cy: +circle.getAttribute("cy"),
-        r: +circle.getAttribute("r")
-    };
     const { size, radiusTextShift } = dotParams[dotName];
-
     let g = addGroup(`group${dotName}_${deg}`, `g${dotName}`);
 
-    let [x, y] = getPos(deg, circleParams);
+    let [x, y] = getPos(deg, circleParams[dotName]);
     addCircle(x, y, size, `dot${dotName}`, g);
 
-    let [xText, yText] = getPos(deg, circleParams, radiusTextShift);
+    let [xText, yText] = getPos(deg, circleParams[dotName], radiusTextShift);
     addText(xText, yText, `text${dotName}`, textData, g);
 }
 
@@ -266,8 +266,8 @@ function addText(x, y, class_name, content, g) {
     text.setAttribute("y", y - offset_y);
 }
 
-function getPos(deg, circleParams, radiusTextShift) {
-    let { cx, cy, r } = circleParams;
+function getPos(deg, cirParams, radiusTextShift) {
+    let { cx, cy, r } = cirParams;
     r = (radiusTextShift !== undefined) ? r += radiusTextShift : r;
     let rad = deg2rad(deg);
     let x = cx + r * Math.cos(rad);
@@ -353,7 +353,7 @@ function getSlaveProDots(dot) {
         if (item["mainSkill"].includes(text)) {
             arr.push(item.name);
         }
-        if (item.hasOwnProperty("otherSkill") && item["otherSkill"].includes(text)) {
+        if (item?.["otherSkill"].includes(text)) {
             arr.push(item.name);
         }
     }
@@ -361,13 +361,11 @@ function getSlaveProDots(dot) {
 }
 
 function getSlaveSkillDots(dot) {
-    let arr = [];
     let { text } = getDotParams(dot);
     let pro = INPUT_DATA.filter(obj => obj.name == text)[0];
+    let arr = pro["mainSkill"];
     if (pro.hasOwnProperty("otherSkill")) {
-        arr = pro["mainSkill"].concat(pro["otherSkill"]);
-    } else {
-        arr = pro["mainSkill"];
+        arr = arr.concat(pro["otherSkill"]);
     }
     return arr;
 }
@@ -631,14 +629,15 @@ function highlightDot(dot) {
     animate(radiusScaleUp, 150, ringParams)
 }
 
-function addBigCircle(cx, cy, r, nameId) {
+function addBigCircle(params) {
+    let {cx, cy, r, strokeWidth, id} = params;
     let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     element.setAttribute("cx", cx);
     element.setAttribute("cy", cy);
     element.setAttribute("r", r);
     element.setAttribute("stroke", "#ADADAD");
-    element.setAttribute("stroke-width", bigCircleParams.strokeWidth);
-    element.setAttribute("id", nameId);
+    element.setAttribute("stroke-width", strokeWidth);
+    element.setAttribute("id", id);
     mainSVG.append(element);
 }
 
