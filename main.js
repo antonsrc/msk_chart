@@ -150,29 +150,38 @@ const tempElements = [
 window.addEventListener("load", () => {
     addBigCircle(circleParams["Skill"]);
     addBigCircle(circleParams["Pro"]);
-    addDotsAtCircle(getAllSkill, "Skill");
-    addDotsAtCircle(getAllPro, "Pro");
+    addDotGroups(getAllSkill, "Skill");
+    addDotGroups(getAllPro, "Pro");
 
     mainSVG.addEventListener("click", e => {
         let dot = e.target;
         if (!isDot(dot)) return;
-        removePreviousEvents(tempElements);
+
+        removeTempElements(tempElements);
         unselectAll();
-        highlightDot(dot);
+
+        highlightMasterDot(dot);
+
+        let slaveDots = getSlaveDots(dot);
+        let currentSlaveGroups = getGroupsOfSlaveDots(dot, slaveDots);
+        let slaveGroupsNearest = nearestSlaveDots(dot, slaveDots.length);
+        let nearestSlaveGroups = moveContent(dot, currentSlaveGroups, slaveGroupsNearest);
+
+        let dotSlaves = highlightSlaves(nearestSlaveGroups);
         changeTextArea(dot);
-        addAllPaths(dot);
+        addAllPaths(dot, dotSlaves);
     });
 });
 
-function addDot(dotName, textData, deg) {
-    const { size, radiusTextShift } = dotParams[dotName];
-    let g = addGroup(`group${dotName}_${deg}`, `g${dotName}`);
+function addDotGroup(dotType, textData, deg) {
+    let g = addGroup(`group${dotType}_${deg}`, `g${dotType}`);
+    const { size, radiusTextShift } = dotParams[dotType];
 
-    let [x, y] = getPos(deg, circleParams[dotName]);
-    addCircle(x, y, size, `dot${dotName}`, g);
+    let [x, y] = getPos(deg, circleParams[dotType]);
+    addCircle(x, y, size, `dot${dotType}`, g);
 
-    let [xText, yText] = getPos(deg, circleParams[dotName], radiusTextShift);
-    addText(xText, yText, `text${dotName}`, textData, g);
+    let [xText, yText] = getPos(deg, circleParams[dotType], radiusTextShift);
+    addText(xText, yText, `text${dotType}`, textData, g);
 }
 
 function addRing(dot) {
@@ -334,7 +343,7 @@ function getDegSigns(coords, x0, y0, x1, y1) {
     });
 }
 
-function removePreviousEvents(arr) {
+function removeTempElements(arr) {
     for (const item of arr) {
         document.querySelectorAll(item).forEach(i => i.remove());
     }
@@ -394,9 +403,11 @@ function removeDuplicateKeys(obj1, obj2) {
     return [obj1Filtered, obj2Filtered];
 }
 
-function getObjOfContentToGroupId(arr, selector) {
+function getGroupsOfSlaveDots(dot, arr) {
+    let { dotType } = getDotParams(dot);
+    let slaveDotType = dotParams[dotType].slave;
     let slaveGroups = {};
-    for (const i of document.querySelectorAll(`.text${selector}`)) {
+    for (const i of document.querySelectorAll(`.text${slaveDotType}`)) {
         if (arr.includes(i.textContent)) {
             let group = i.closest("g");
             slaveGroups[i.textContent] = group.id;
@@ -431,11 +442,17 @@ function replaceContentParams(i, arr1, arr2) {
     foreignElem.setAttribute("height", tempH);
 }
 
-function moveContent(dot, slaveDotType) {
-    let textOfSlaveDots = (slaveDotType == "Pro") ? getSlaveProDots(dot) : getSlaveSkillDots(dot);
-    let slaveGroups = getObjOfContentToGroupId(textOfSlaveDots, slaveDotType);
-    let slaveGroupsNearest = nearestSlaveDots(dot, textOfSlaveDots.length);
-    let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(slaveGroups, slaveGroupsNearest);
+function getSlaveDots(dot) {
+    let { dotType } = getDotParams(dot);
+    let slaveDotType = dotParams[dotType].slave;
+    return (slaveDotType == "Pro") ? getSlaveProDots(dot) : getSlaveSkillDots(dot);
+}
+
+function moveContent(dot, from, into) {
+    let { dotType } = getDotParams(dot);
+    let slaveDotType = dotParams[dotType].slave;
+
+    let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(from, into);
 
     let slaveGroupsNearestArr = Object.entries(slaveGroupsNearestFiltered);
     let slaveGroupsArr = Object.entries(slaveGroupsFiltered);
@@ -446,7 +463,7 @@ function moveContent(dot, slaveDotType) {
             replaceContentParams(i, slaveGroupsNearestArr, slaveGroupsArr);
         }
     }
-    return Object.values(slaveGroupsNearest);
+    return Object.values(into);
 }
 
 function highlightSlaves(arr) {
@@ -464,7 +481,7 @@ function highlightSlaves(arr) {
         y1.push(+dot.getAttribute("cy"));
         names.push(text);
     }
-    return [names, x1, y1];
+    return { names, x1, y1 };
 }
 
 function getPathParams(dot, x1, y1, namesSlaves) {
@@ -508,14 +525,11 @@ function getPathParams(dot, x1, y1, namesSlaves) {
     return [arrDegSign, arrPathClass];
 }
 
-function addAllPaths(dot) {
+function addAllPaths(dot, dotSlaves) {
     let { dotX, dotY, dotType } = getDotParams(dot);
     let slaveDotType = dotParams[dotType].slave;
-    let nearestSlaveGroupsArr = moveContent(dot, slaveDotType);
-    let [namesSlaves, x1, y1] = highlightSlaves(nearestSlaveGroupsArr);
-
-    let [arrDegSign, arrPathClass] = getPathParams(dot, x1, y1, namesSlaves);
-
+    let { names, x1, y1 } = dotSlaves;
+    let [arrDegSign, arrPathClass] = getPathParams(dot, x1, y1, names);
     for (let i = 0; i < arrDegSign.length; i++) {
         // Рычажок длинной 3/4 от отрезка
         let BCx = (dotX + x1[i] * 3) / 4;
@@ -585,18 +599,21 @@ function isDot(dot) {
 
 function changeTextArea(dot) {
     let { textElem, dotType } = getDotParams(dot);
-    if (dotType == "Skill") {
-        textElem.setAttribute("class", `text${dotType}_selected`);
-    } else if (dotType == "Pro") {
-        addRect(getRectCoord(textElem), 7, `rect${dotType}`);
+    switch (dotType) {
+        case "Skill":
+            textElem.setAttribute("class", `text${dotType}_selected`);
+            break;
+        case "Pro":
+            addRect(getRectCoord(textElem), 7, `rect${dotType}`);
+            break;
     }
 }
 
-function addDotsAtCircle(fn, dotName) {
+function addDotGroups(fn, dotType) {
     let inputData = fn(INPUT_DATA);
     let degStep = 360 / inputData.length;
     let degrees = degreesWithStep(degStep);
-    inputData.forEach((text, i) => addDot(dotName, text, degrees[i]));
+    inputData.forEach((text, i) => addDotGroup(dotType, text, degrees[i]));
 }
 
 function getCoords(groupName) {
@@ -612,25 +629,24 @@ function getCoords(groupName) {
 function degreesWithStep(step) {
     let degrees = [];
     for (let deg = -90; deg < 270; deg += step) {
-        degrees.push(Math.trunc(deg))
+        degrees.push(Math.trunc(deg));
     }
-    return degrees
+    return degrees;
 }
 
-function highlightDot(dot) {
+function highlightMasterDot(dot) {
     let { dotType } = getDotParams(dot);
     dot.setAttribute("class", `dot${dotType}_selected`);
-
     addRing(dot);
     let ringParams = {
         elem: document.querySelector(`.ring${dotType}`),
         maxRadius: dotParams[dotType].ringSize,
     };
-    animate(radiusScaleUp, 150, ringParams)
+    animate(radiusScaleUp, 150, ringParams);
 }
 
 function addBigCircle(params) {
-    let {cx, cy, r, strokeWidth, id} = params;
+    let { cx, cy, r, strokeWidth, id } = params;
     let element = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     element.setAttribute("cx", cx);
     element.setAttribute("cy", cy);
