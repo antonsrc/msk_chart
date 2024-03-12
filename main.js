@@ -162,10 +162,12 @@ window.addEventListener("load", () => {
 
         highlightMasterDot(dot);
 
-        let slaveDots = getSlaveDots(dot);
-        let currentSlaveGroups = getGroupsOfSlaveDots(dot, slaveDots);
-        let slaveGroupsNearest = nearestSlaveDots(dot, slaveDots.length);
-        let nearestSlaveGroups = moveContent(dot, currentSlaveGroups, slaveGroupsNearest);
+        let slaves = getSlaves(dot);
+        let currentSlaveGroups = getGroupsOfSlaveDots(dot, slaves);
+        let nearestGroupDots = getNearestDotGroups(dot, slaves.length);
+
+
+        let nearestSlaveGroups = moveContent(dot, currentSlaveGroups, nearestGroupDots);
 
         let dotSlaves = highlightSlaves(nearestSlaveGroups);
         changeTextArea(dot);
@@ -306,7 +308,7 @@ function getLength(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
-function nearestSlaveDots(dot, amount) {
+function getNearestDotGroups(dot, amount) {
     let { dotX, dotY, dotType } = getDotParams(dot);
     let lengthPaths = [];
     let dotCoord = getCoords(`.g${dotParams[dotType].slave}`);
@@ -319,12 +321,12 @@ function nearestSlaveDots(dot, amount) {
     lengthPaths.sort((a, b) => a[0] - b[0]);
     let groupNames = lengthPaths.map(i => i[1]);
 
-    let slaveGroupsNearest = {};
+    let nearestGroupDots = {};
     for (const item of groupNames.slice(0, amount)) {
         let text = document.querySelector(`#${item} div`).textContent;
-        slaveGroupsNearest[text] = item;
+        nearestGroupDots[text] = item;
     }
-    return slaveGroupsNearest;
+    return nearestGroupDots;
 }
 
 function getDegSigns(coords, x0, y0, x1, y1) {
@@ -391,7 +393,7 @@ function getRectCoord(text) {
     return [xRect, yRect, width, height];
 }
 
-function removeDuplicateKeys(obj1, obj2) {
+function removeDuplicateSlaves(obj1, obj2) {
     let obj1Filtered = structuredClone(obj1);
     let obj2Filtered = structuredClone(obj2);
     for (let key in obj1Filtered) {
@@ -442,7 +444,7 @@ function replaceContentParams(i, arr1, arr2) {
     foreignElem.setAttribute("height", tempH);
 }
 
-function getSlaveDots(dot) {
+function getSlaves(dot) {
     let { dotType } = getDotParams(dot);
     let slaveDotType = dotParams[dotType].slave;
     return (slaveDotType == "Pro") ? getSlaveProDots(dot) : getSlaveSkillDots(dot);
@@ -452,10 +454,10 @@ function moveContent(dot, from, into) {
     let { dotType } = getDotParams(dot);
     let slaveDotType = dotParams[dotType].slave;
 
-    let [slaveGroupsFiltered, slaveGroupsNearestFiltered] = removeDuplicateKeys(from, into);
+    let [slaveGroups, nearestGroups] = removeDuplicateSlaves(from, into);
 
-    let slaveGroupsNearestArr = Object.entries(slaveGroupsNearestFiltered);
-    let slaveGroupsArr = Object.entries(slaveGroupsFiltered);
+    let slaveGroupsNearestArr = Object.entries(nearestGroups);
+    let slaveGroupsArr = Object.entries(slaveGroups);
 
     for (let i = 0; i < slaveGroupsArr.length; i++) {
         replaceContent(i, slaveGroupsNearestArr, slaveGroupsArr);
