@@ -163,13 +163,12 @@ window.addEventListener("load", () => {
         highlightMasterDot(dot);
 
         let slaves = getSlaves(dot);
-        let currentSlaveGroups = getGroupsOfSlaveDots(dot, slaves);
-        let nearestGroupDots = getNearestDotGroups(dot, slaves.length);
+        let slaveGroups = getSlaveGroups(dot, slaves);
+        let nearestGroups = getNearestGroups(dot, slaves.length);
+        let [slaveGroupsFiltered, nearestGroupsFiltered] = removeDuplicateSlaves(slaveGroups, nearestGroups);
 
-
-        let nearestSlaveGroups = moveContent(dot, currentSlaveGroups, nearestGroupDots);
-
-        let dotSlaves = highlightSlaves(nearestSlaveGroups);
+        replaceContent(dot, slaveGroupsFiltered, nearestGroupsFiltered);
+        let dotSlaves = highlightSlaves(nearestGroups.values());
         changeTextArea(dot);
         addAllPaths(dot, dotSlaves);
     });
@@ -308,7 +307,7 @@ function getLength(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
-function getNearestDotGroups(dot, amount) {
+function getNearestGroups(dot, amount) {
     let { dotX, dotY, dotType } = getDotParams(dot);
     let lengthPaths = [];
     let dotCoord = getCoords(`.g${dotParams[dotType].slave}`);
@@ -321,12 +320,12 @@ function getNearestDotGroups(dot, amount) {
     lengthPaths.sort((a, b) => a[0] - b[0]);
     let groupNames = lengthPaths.map(i => i[1]);
 
-    let nearestGroupDots = {};
+    let nearestGroups = new Map();
     for (const item of groupNames.slice(0, amount)) {
         let text = document.querySelector(`#${item} div`).textContent;
-        nearestGroupDots[text] = item;
+        nearestGroups.set(text, item);
     }
-    return nearestGroupDots;
+    return nearestGroups;
 }
 
 function getDegSigns(coords, x0, y0, x1, y1) {
@@ -394,54 +393,28 @@ function getRectCoord(text) {
 }
 
 function removeDuplicateSlaves(obj1, obj2) {
-    let obj1Filtered = structuredClone(obj1);
-    let obj2Filtered = structuredClone(obj2);
-    for (let key in obj1Filtered) {
-        if (key in obj2Filtered) {
-            delete obj2Filtered[key];
-            delete obj1Filtered[key];
+    let obj1Filtered = new Map(obj1);
+    let obj2Filtered = new Map(obj2);
+    for (let key of obj1Filtered.keys()) {
+        if (obj2Filtered.has(key)) {
+            obj1Filtered.delete(key);
+            obj2Filtered.delete(key);
         }
     }
     return [obj1Filtered, obj2Filtered];
 }
 
-function getGroupsOfSlaveDots(dot, arr) {
+function getSlaveGroups(dot, arr) {
     let { dotType } = getDotParams(dot);
     let slaveDotType = dotParams[dotType].slave;
-    let slaveGroups = {};
+    let slaveGroups = new Map();
     for (const i of document.querySelectorAll(`.text${slaveDotType}`)) {
         if (arr.includes(i.textContent)) {
             let group = i.closest("g");
-            slaveGroups[i.textContent] = group.id;
+            slaveGroups.set(i.textContent, group.id);
         }
     }
     return slaveGroups;
-}
-
-function replaceContent(i, arr1, arr2) {
-    let temp = arr1[i][0];
-    arr1[i][0] = arr2[i][0];
-    arr2[i][0] = temp;
-
-    let foreignElemNearest = document.querySelector(`#${arr1[i][1]} foreignObject`);
-    let foreignElem = document.querySelector(`#${arr2[i][1]} foreignObject`);
-    foreignElemNearest.firstChild.textContent = arr1[i][0];
-    foreignElem.firstChild.textContent = arr2[i][0];
-}
-
-function replaceContentParams(i, arr1, arr2) {
-    let foreignElemNearest = document.querySelector(`#${arr1[i][1]} foreignObject`);
-    let foreignElem = document.querySelector(`#${arr2[i][1]} foreignObject`);
-
-    let tempW = +foreignElemNearest.getAttribute("width");
-    let tempH = +foreignElemNearest.getAttribute("height");
-    let wS = +foreignElem.getAttribute("width");
-    let hS = +foreignElem.getAttribute("height");
-
-    foreignElemNearest.setAttribute("width", wS);
-    foreignElemNearest.setAttribute("height", hS);
-    foreignElem.setAttribute("width", tempW);
-    foreignElem.setAttribute("height", tempH);
 }
 
 function getSlaves(dot) {
@@ -450,22 +423,34 @@ function getSlaves(dot) {
     return (slaveDotType == "Pro") ? getSlaveProDots(dot) : getSlaveSkillDots(dot);
 }
 
-function moveContent(dot, from, into) {
+function replaceContent(dot, slave, nearest) {
     let { dotType } = getDotParams(dot);
     let slaveDotType = dotParams[dotType].slave;
+    let slaveArr = Array.from(slave);
+    let nearestArr = Array.from(nearest);
 
-    let [slaveGroups, nearestGroups] = removeDuplicateSlaves(from, into);
+    for (let i = 0; i < nearestArr.length; i++) {
+        let temp = slaveArr[i][0];
+        slaveArr[i][0] = nearestArr[i][0];
+        nearestArr[i][0] = temp;
+    
+        let foreignElemNearest = document.querySelector(`#${slaveArr[i][1]} foreignObject`);
+        let foreignElem = document.querySelector(`#${nearestArr[i][1]} foreignObject`);
+        foreignElemNearest.firstChild.textContent = slaveArr[i][0];
+        foreignElem.firstChild.textContent = nearestArr[i][0];
 
-    let slaveGroupsNearestArr = Object.entries(nearestGroups);
-    let slaveGroupsArr = Object.entries(slaveGroups);
-
-    for (let i = 0; i < slaveGroupsArr.length; i++) {
-        replaceContent(i, slaveGroupsNearestArr, slaveGroupsArr);
         if (slaveDotType == "Pro") {
-            replaceContentParams(i, slaveGroupsNearestArr, slaveGroupsArr);
+            let tempW = +foreignElemNearest.getAttribute("width");
+            let tempH = +foreignElemNearest.getAttribute("height");
+            let wS = +foreignElem.getAttribute("width");
+            let hS = +foreignElem.getAttribute("height");
+        
+            foreignElemNearest.setAttribute("width", wS);
+            foreignElemNearest.setAttribute("height", hS);
+            foreignElem.setAttribute("width", tempW);
+            foreignElem.setAttribute("height", tempH);
         }
     }
-    return Object.values(into);
 }
 
 function highlightSlaves(arr) {
